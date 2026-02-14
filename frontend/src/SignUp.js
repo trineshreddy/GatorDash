@@ -21,6 +21,17 @@ function SignUp({
         }
     };
 
+    const getPasswordStrength = (pwd) => {
+        if (!pwd) return { level: 0, label: '', color: '' };
+        if (pwd.length < 8) return { level: 1, label: 'Weak', color: 'var(--color-error)' };
+        const hasUpper = /[A-Z]/.test(pwd);
+        const hasDigit = /\d/.test(pwd);
+        if (hasUpper && hasDigit) return { level: 3, label: 'Strong', color: 'var(--color-success)' };
+        return { level: 2, label: 'Fair', color: 'var(--color-warning)' };
+    };
+
+    const strength = getPasswordStrength(password);
+
     const validateForm = (e) => {
         e.preventDefault();
         const newErrors = {};
@@ -122,6 +133,22 @@ function SignUp({
                         onBlur={() => setPasswordFocused(false)}
                     />
                     {errors.password && <span className="error">{errors.password}</span>}
+                    {password && (
+                        <div className="strength-meter">
+                            <div className="strength-track">
+                                <div
+                                    className="strength-bar"
+                                    style={{
+                                        width: `${(strength.level / 3) * 100}%`,
+                                        background: strength.color
+                                    }}
+                                />
+                            </div>
+                            <span className="strength-label" style={{ color: strength.color }}>
+                                {strength.label}
+                            </span>
+                        </div>
+                    )}
                 </div>
 
                 <div className="signup-inp">
