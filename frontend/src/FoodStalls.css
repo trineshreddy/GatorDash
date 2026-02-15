@@ -22,23 +22,11 @@
 /* ── Responsive Grid ── */
 .stalls-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: 1fr;
     gap: 28px;
-    max-width: 1100px;
+    max-width: 600px;
     margin: 0 auto;
     padding: 0 32px 60px;
-}
-
-@media (max-width: 900px) {
-    .stalls-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-@media (max-width: 560px) {
-    .stalls-grid {
-        grid-template-columns: 1fr;
-    }
 }
 
 /* ── Stall Card ── */
