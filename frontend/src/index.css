@@ -1,0 +1,71 @@
+/* ── Google Fonts ── */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap');
+
+/* ── Design System — Color Palette & Tokens ── */
+:root {
+  --color-navy: #001845;
+  --color-navy-light: #002366;
+  --color-navy-mid: #012a78;
+
+  --color-orange: #FA4616;
+  --color-orange-hover: #d93b10;
+  --color-orange-glow: rgba(250, 70, 22, 0.35);
+
+  --color-white: #ffffff;
+  --color-gray-100: #f0f4fa;
+  --color-gray-300: #b8c4d8;
+  --color-gray-500: #6b7fa0;
+  --color-gray-700: #2e3a5e;
+
+  --color-success: #22c55e;
+  --color-error: #ef4444;
+  --color-warning: #f59e0b;
+  --color-info: #3b82f6;
+
+  --glass-bg: rgba(255, 255, 255, 0.06);
+  --glass-border: rgba(255, 255, 255, 0.10);
+  --glass-blur: 18px;
+
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.18);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.28);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.38);
+  --shadow-glow: 0 0 24px var(--color-orange-glow);
+
+  --font-heading: 'Poppins', sans-serif;
+  --font-body: 'Inter', sans-serif;
+
+  --transition-fast: 0.2s ease;
+  --transition-normal: 0.3s ease;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+}
+
+/* ── Global Reset ── */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* ── Body Styles ── */
+body {
+  font-family: var(--font-body);
+  background: var(--color-navy);
+  color: var(--color-white);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Base Resets ── */
+a {
+  color: inherit;
+}
+
+input,
+button {
+  font-family: inherit;
+}

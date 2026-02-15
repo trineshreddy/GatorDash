@@ -9,7 +9,7 @@ into one unified system.
 
 ## Team Members
 Front End:
-- Arvindh Sundararajan
+- Arvind Krishna Sundararajan
   
 Back End:
 - Raghul Siddarath Chandrasekar

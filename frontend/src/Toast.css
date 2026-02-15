@@ -1,0 +1,66 @@
+/* ── Toast Container ── */
+.toast-container {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    z-index: 9999;
+    animation: slideInRight 0.35s ease forwards;
+}
+
+/* ── Toast Card ── */
+.toast {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 20px;
+    min-width: 300px;
+    background: var(--color-navy-light);
+    color: var(--color-white);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    border-left: 4px solid;
+}
+
+/* ── Type Variants ── */
+.toast.success {
+    border-left-color: var(--color-success);
+}
+
+.toast.error {
+    border-left-color: var(--color-error);
+}
+
+.toast.info {
+    border-left-color: var(--color-info);
+}
+
+/* ── Close Button ── */
+.toast-close {
+    background: none;
+    border: none;
+    color: var(--color-gray-300);
+    cursor: pointer;
+    font-size: 1.2rem;
+    margin-left: auto;
+    padding: 0;
+    transition: color var(--transition-fast);
+}
+
+.toast-close:hover {
+    color: var(--color-white);
+}
+
+/* ── Slide-in Animation ── */
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(80px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}

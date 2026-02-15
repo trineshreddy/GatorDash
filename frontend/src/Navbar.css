@@ -1,0 +1,67 @@
+/* ── Navbar ── */
+.navbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 32px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border-bottom: 1px solid var(--glass-border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+/* ── Brand ── */
+.navbar-brand {
+    font-family: var(--font-heading);
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.brand-logo {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--color-navy);
+    padding: 4px;
+    object-fit: contain;
+    box-shadow: 0 0 10px var(--color-orange-glow);
+    transition: transform var(--transition-fast);
+}
+
+.brand-logo:hover {
+    transform: scale(1.1) rotate(-5deg);
+}
+
+.brand-gator {
+    color: var(--color-white);
+}
+
+.brand-dash {
+    color: var(--color-orange);
+}
+
+/* ── Sign Out Button ── */
+.signout-btn {
+    padding: 8px 20px;
+    background: transparent;
+    color: var(--color-gray-300);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.signout-btn:hover {
+    color: var(--color-white);
+    border-color: var(--color-orange);
+    background: rgba(250, 95, 47, 0.1);
+}
