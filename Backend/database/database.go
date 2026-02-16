@@ -49,10 +49,10 @@ func InitDB() error {
 	port := getEnv("DB_PORT", "5432")
 	sslmode := getEnv("DB_SSLMODE", "disable")
 
-	// Trim whitespace from password (common issue)
+	// Trim whitespace from password
 	password = strings.TrimSpace(password)
 
-	// Log connection details (without password, but show if password is empty)
+	// Log connection details
 	log.Printf("Attempting to connect to PostgreSQL...")
 	log.Printf("Host: %s, Port: %s, Database: %s, User: %s", host, port, dbname, user)
 	if password == "" {
