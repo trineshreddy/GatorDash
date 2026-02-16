@@ -131,3 +131,93 @@ func (h *UserHandler) GetUser(c *gin.Context) {
 
 	utils.SendSuccess(c, "User retrieved successfully", userResponse)
 }
+
+// GetAllUsers retrieves all users
+func (h *UserHandler) GetAllUsers(c *gin.Context) {
+	users, err := h.userStore.GetAllUsers()
+	if err != nil {
+		utils.SendError(c, 500, err.Error())
+		return
+	}
+
+	// Remove passwords from response
+	usersResponse := make([]models.User, len(users))
+	for i, user := range users {
+		usersResponse[i] = user
+		usersResponse[i].Password = ""
+	}
+
+	utils.SendSuccess(c, "Users retrieved successfully", usersResponse)
+}
+
+// UpdateUser updates user information
+func (h *UserHandler) UpdateUser(c *gin.Context) {
+	userID := c.Param("id")
+
+	if userID == "" {
+		utils.SendError(c, 400, "User ID is required")
+		return
+	}
+
+	var req models.UpdateUserRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.SendError(c, 400, "Invalid request body")
+		return
+	}
+
+	// Check if user exists
+	_, exists := h.userStore.GetUserByID(userID)
+	if !exists {
+		utils.SendError(c, 404, "User not found")
+		return
+	}
+
+	// Prepare update object
+	updates := &models.User{
+		Name:     req.Name,
+		Email:    req.Email,
+		Phone:    req.Phone,
+		Password: req.Password,
+	}
+
+	// Hash password if provided
+	if req.Password != "" {
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+		if err != nil {
+			utils.SendError(c, 500, "Failed to hash password")
+			return
+		}
+		updates.Password = string(hashedPassword)
+	}
+
+	// Update user
+	if err := h.userStore.UpdateUser(userID, updates); err != nil {
+		utils.SendError(c, 400, err.Error())
+		return
+	}
+
+	// Get updated user
+	updatedUser, _ := h.userStore.GetUserByID(userID)
+	userResponse := *updatedUser
+	userResponse.Password = ""
+
+	utils.SendSuccess(c, "User updated successfully", userResponse)
+}
+
+// DeleteUser deletes a user
+func (h *UserHandler) DeleteUser(c *gin.Context) {
+	userID := c.Param("id")
+
+	if userID == "" {
+		utils.SendError(c, 400, "User ID is required")
+		return
+	}
+
+	if err := h.userStore.DeleteUser(userID); err != nil {
+		utils.SendError(c, 404, err.Error())
+		return
+	}
+
+	
+	utils.SendSuccess(c, "User deleted successfully", nil)
+}
