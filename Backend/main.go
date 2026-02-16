@@ -30,6 +30,7 @@ func main() {
 	fmt.Println("  POST   /api/signup")
 	fmt.Println("  POST   /api/signin")
 	fmt.Println("  GET    /api/users")
+	
 
 	log.Fatal(router.Run(port))
 }
