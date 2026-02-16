@@ -21,7 +21,43 @@ func NewUserStore() *UserStore {
 	}
 }
 
+// CreateUser adds a new user to the database
+func (s *UserStore) CreateUser(user *models.User) error {
+	// Check if user with email already exists
+	var existingUser models.User
+	result := s.db.Where("email = ?", user.Email).First(&existingUser)
+	if result.Error == nil {
+		return fmt.Errorf("user with email %s already exists", user.Email)
+	}
 
+	// Create user
+	result = s.db.Create(user)
+	if result.Error != nil {
+		return fmt.Errorf("failed to create user: %w", result.Error)
+	}
+
+	return nil
+}
+
+// GetUserByEmail retrieves a user by email
+func (s *UserStore) GetUserByEmail(email string) (*models.User, bool) {
+	var user models.User
+	result := s.db.Where("email = ?", email).First(&user)
+	if result.Error != nil {
+		return nil, false
+	}
+	return &user, true
+}
+
+// GetUserByID retrieves a user by ID
+func (s *UserStore) GetUserByID(id string) (*models.User, bool) {
+	var user models.User
+	result := s.db.First(&user, "id = ?", id)
+	if result.Error != nil {
+		return nil, false
+	}
+	return &user, true
+}
 
 // GetAllUsers retrieves all users from the database
 func (s *UserStore) GetAllUsers() ([]models.User, error) {
