@@ -175,7 +175,7 @@
 }
 
 .stall-desc {
-    color: var(--color-gray-500);
+    color: var(--color-gray-300);
     font-size: 0.9rem;
     font-weight: 400;
     margin: 0;
