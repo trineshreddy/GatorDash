@@ -38,6 +38,7 @@
 - Implement Delete User API
 - Test APIs using Postman
 
+
 **Frontend Issues**
 - Initialize the  React project and set up design system (CSS variables, color palette, Google Fonts)
 - Implement Sign Up page with form fields (Name, Email, Phone, Password, Confirm Password)
