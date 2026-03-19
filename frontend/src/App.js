@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import SignUp from './SignUp';
 import SignIn from './SignIn';
 import FoodStalls from './FoodStalls';
+import Menu from './Menu';
 import NotFound from './NotFound';
 import Toast from './Toast';
 import './App.css';
@@ -81,6 +82,14 @@ function App() {
           element={
             isLoggedIn
               ? <div className="page-transition"><FoodStalls onLogout={handleLogout} /></div>
+              : <Navigate to="/signin" />
+          }
+        />
+        <Route
+          path="/menu/:stallId"
+          element={
+            isLoggedIn
+              ? <div className="page-transition"><Menu onLogout={handleLogout} /></div>
               : <Navigate to="/signin" />
           }
         />
