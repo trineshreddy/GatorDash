@@ -1,10 +1,13 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import Navbar from './Navbar';
 import './FoodStalls.css';
 
 import { stalls } from './data';
 
 function FoodStalls({ onLogout }) {
+    const navigate = useNavigate();
+
     return (
         <div className="foodstalls-page">
             <Navbar onSignOut={onLogout} />
@@ -15,6 +18,7 @@ function FoodStalls({ onLogout }) {
                         className="stall-card"
                         key={index}
                         style={{ animationDelay: `${index * 0.1}s` }}
+                        onClick={() => navigate(`/menu/${index}`)}
                     >
                         <div
                             className="stall-color-bar"
