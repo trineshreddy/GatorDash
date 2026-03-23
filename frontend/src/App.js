@@ -30,12 +30,31 @@ function App() {
     setTimeout(() => setToast((prev) => ({ ...prev, visible: false })), 3000);
   };
 
-  const handleSignIn = (emailInput, passwordInput) => {
-    if (emailInput === dummyUser.email && passwordInput === dummyUser.password) {
-      setIsLoggedIn(true);
-      showToast('Welcome to GatorDash!', 'success');
-    } else {
-      showToast('Invalid credentials. Please try again.', 'error');
+  const handleSignIn = async (emailInput, passwordInput) => {
+    try {
+      const response = await fetch('/api/signin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: emailInput, password: passwordInput }),
+      });
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        localStorage.setItem('user', JSON.stringify(data.data));
+        setIsLoggedIn(true);
+        showToast('Welcome to GatorDash!', 'success');
+      } else {
+        showToast(data.message || 'Invalid credentials.', 'error');
+      }
+    } catch (err) {
+      // Backend not running — fall back to mock auth for testing
+      if (emailInput === dummyUser.email && passwordInput === dummyUser.password) {
+        localStorage.setItem('user', JSON.stringify({ name: 'Test User', email: emailInput }));
+        setIsLoggedIn(true);
+        showToast('Welcome to GatorDash! (mock mode)', 'success');
+      } else {
+        showToast('Invalid credentials. Please try again.', 'error');
+      }
     }
   };
 
