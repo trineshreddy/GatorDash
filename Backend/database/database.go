@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"gatordash-backend/models"
 
@@ -23,11 +24,11 @@ func InitDB() error {
 
 	// Try to load .env file from multiple locations
 	envPaths := []string{
-		".env",                           // Current directory
-		filepath.Join(".", ".env"),       // Explicit current directory
-		filepath.Join("..", ".env"),      // Parent directory
+		".env",                      // Current directory
+		filepath.Join(".", ".env"),  // Explicit current directory
+		filepath.Join("..", ".env"), // Parent directory
 	}
-	
+
 	envLoaded := false
 	for _, envPath := range envPaths {
 		if err := godotenv.Load(envPath); err == nil {
@@ -36,7 +37,7 @@ func InitDB() error {
 			break
 		}
 	}
-	
+
 	if !envLoaded {
 		log.Printf("Warning: Could not load .env file, using environment variables or defaults")
 	}
@@ -75,12 +76,22 @@ func InitDB() error {
 	}
 
 	// Auto-migrate the schema
-	err = DB.AutoMigrate(&models.User{})
+	err = DB.AutoMigrate(
+		&models.User{},
+		&models.FoodStall{},
+		&models.MenuItem{},
+		&models.CartItem{},
+	)
 	if err != nil {
 		return fmt.Errorf("failed to migrate database: %w", err)
 	}
 
 	log.Println("PostgreSQL database connected and migrated successfully")
+
+	if err := seedInitialData(); err != nil {
+		return fmt.Errorf("failed to seed initial data: %w", err)
+	}
+
 	return nil
 }
 
@@ -95,4 +106,32 @@ func getEnv(key, defaultValue string) string {
 		return value
 	}
 	return defaultValue
+}
+
+// seedInitialData inserts starter food stalls and menu items when empty.
+func seedInitialData() error {
+	var stallCount int64
+	if err := DB.Model(&models.FoodStall{}).Count(&stallCount).Error; err != nil {
+		return err
+	}
+	if stallCount > 0 {
+		return nil
+	}
+
+	stalls := []models.FoodStall{
+		{ID: "stall_1", Name: "Gator Bites", Description: "Burgers, fries, and quick bites", IsActive: true},
+		{ID: "stall_2", Name: "Swamp Pizza", Description: "Fresh pizzas and garlic bread", IsActive: true},
+	}
+	if err := DB.Create(&stalls).Error; err != nil {
+		return err
+	}
+
+	now := time.Now()
+	menuItems := []models.MenuItem{
+		{ID: fmt.Sprintf("menu_%d", now.UnixNano()), FoodStallID: "stall_1", Name: "Classic Burger", Description: "Beef patty with cheese", Price: 9.99, IsAvailable: true},
+		{ID: fmt.Sprintf("menu_%d", now.UnixNano()+1), FoodStallID: "stall_1", Name: "Crispy Fries", Description: "Salted potato fries", Price: 3.99, IsAvailable: true},
+		{ID: fmt.Sprintf("menu_%d", now.UnixNano()+2), FoodStallID: "stall_2", Name: "Pepperoni Pizza", Description: "12-inch pepperoni pizza", Price: 12.49, IsAvailable: true},
+		{ID: fmt.Sprintf("menu_%d", now.UnixNano()+3), FoodStallID: "stall_2", Name: "Veggie Pizza", Description: "12-inch veggie pizza", Price: 11.49, IsAvailable: true},
+	}
+	return DB.Create(&menuItems).Error
 }
