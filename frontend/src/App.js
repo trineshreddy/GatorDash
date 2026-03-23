@@ -92,6 +92,7 @@ function App() {
                 confirmPassword={confirmPassword} confirmSetPassword={confirmSetPassword}
                 errors={errors} setErrors={setErrors}
                 passwordFocused={passwordFocused} setPasswordFocused={setPasswordFocused}
+                showToast={showToast}
               />
             </div>
           }

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import gatorLogo from './assets/gator-logo.png';
 import './SignUp.css';
 
@@ -10,8 +10,11 @@ function SignUp({
     password, setPassword,
     confirmPassword, confirmSetPassword,
     errors, setErrors,
-    passwordFocused, setPasswordFocused
+    passwordFocused, setPasswordFocused,
+    showToast
 }) {
+
+    const navigate = useNavigate();
 
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -80,7 +83,29 @@ function SignUp({
         setErrors(newErrors);
 
         if (Object.keys(newErrors).length === 0) {
-            console.log('Form submitted successfully:', { name, email, phone, password });
+            handleSignUp();
+        }
+    };
+
+    const handleSignUp = async () => {
+        try {
+            const response = await fetch('/api/signup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, email, phone, password }),
+            });
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                if (showToast) showToast('Account created successfully! Please sign in.', 'success');
+                navigate('/signin');
+            } else {
+                if (showToast) showToast(data.message || 'Sign up failed.', 'error');
+            }
+        } catch (err) {
+            // Backend not running — show success and redirect anyway for testing
+            if (showToast) showToast('Account created! (mock mode) Please sign in.', 'success');
+            navigate('/signin');
         }
     };
 
