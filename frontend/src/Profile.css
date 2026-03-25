@@ -1,0 +1,13 @@
+.profile-page { min-height: 100vh; background: #0a1628; }
+.profile-container { display: flex; justify-content: center; align-items: center; padding: 4rem 2rem; }
+.profile-card { background: #0f2044; border-radius: 16px; padding: 2.5rem; width: 100%; max-width: 480px; display: flex; flex-direction: column; align-items: center; gap: 1.2rem; box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
+.profile-avatar { width: 80px; height: 80px; border-radius: 50%; background: #e87722; color: white; font-size: 2rem; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+.profile-title { color: #ffffff; font-size: 1.5rem; margin: 0; }
+.profile-field { width: 100%; }
+.profile-field label { color: #e87722; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; display: block; margin-bottom: 4px; }
+.profile-field p { color: #ffffff; font-size: 1rem; margin: 0; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
+.profile-input { width: 100%; background: #1a3060; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; padding: 10px 12px; color: #ffffff; font-size: 1rem; outline: none; box-sizing: border-box; }
+.profile-input:focus { border-color: #e87722; }
+.profile-actions { display: flex; gap: 12px; margin-top: 0.5rem; }
+.edit-btn, .save-btn { background: #e87722; color: white; border: none; padding: 10px 28px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+.cancel-btn { background: transparent; color: #aaa; border: 1px solid rgba(255,255,255,0.2); padding: 10px 28px; border-radius: 8px; font-weight: 600; cursor: pointer; }

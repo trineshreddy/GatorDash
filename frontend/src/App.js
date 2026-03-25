@@ -6,6 +6,7 @@ import FoodStalls from './FoodStalls';
 import Menu from './Menu';
 import NotFound from './NotFound';
 import Toast from './Toast';
+import Profile from './Profile';
 import './App.css';
 
 const dummyUser = { email: 'user@example.com', password: 'Password123' };
@@ -117,6 +118,7 @@ function App() {
               : <Navigate to="/signin" />
           }
         />
+        <Route path="/profile" element={isLoggedIn ? <div className="page-transition"><Profile onLogout={handleLogout} showToast={showToast} /></div> : <Navigate to="/signin" />} />
         <Route path="*" element={<div className="page-transition"><NotFound /></div>} />
       </Routes>
     </BrowserRouter>
