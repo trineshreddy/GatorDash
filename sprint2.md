@@ -173,9 +173,9 @@ Tested using React Testing Library and Jest.
 | Login session lost on page refresh | Initialized `isLoggedIn` from localStorage on app startup |
 | Search filter breaking stall navigation | Used `stalls.indexOf(stall)` to preserve correct IDs after filtering |
 
-## Issues Not Completed & Reasons
+## Next Steps (Sprint 3):
 - JWT authentication middleware (planned for Sprint 3)
 - Connecting Cart/OrderSummary to backend Cart APIs (currently using localStorage, backend APIs are ready)
 - Payment integration (planned for Sprint 3)
 
-Reason: Sprint 2 focused on building all core UI components and backend APIs. Full backend integration of Cart will be completed in Sprint 3.
+
