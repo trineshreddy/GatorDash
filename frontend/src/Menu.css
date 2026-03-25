@@ -1,0 +1,101 @@
+.menu-page {
+    min-height: 100vh;
+    background: linear-gradient(180deg, var(--color-navy) 0%, var(--color-navy-light) 100%);
+    padding-bottom: 60px;
+}
+
+.menu-container {
+    max-width: 800px;
+    margin: 40px auto 0;
+    padding: 0 24px;
+    animation: fadeIn 0.4s ease forwards;
+}
+
+.menu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.menu-header h2 {
+    font-family: var(--font-heading);
+    font-size: 2rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #FF9A76 0%, #FA4616 50%, #FFD1C1 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 0;
+}
+
+.back-btn {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: var(--color-white);
+    padding: 8px 16px;
+    border-radius: var(--radius-md);
+    font-weight: 500;
+}
+
+.back-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+.menu-grid {
+    display: grid;
+    gap: 20px;
+}
+
+.menu-item-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: transform var(--transition-fast), border-color var(--transition-fast);
+}
+
+.menu-item-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(250, 70, 22, 0.4);
+}
+
+.item-name {
+    font-family: var(--font-heading);
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--color-white);
+    margin: 0 0 4px 0;
+}
+
+.item-desc {
+    color: var(--color-gray-300);
+    font-size: 0.9rem;
+    margin: 0 0 12px 0;
+}
+
+.item-price {
+    font-weight: 600;
+    color: var(--color-success);
+    font-size: 1.1rem;
+}
+
+.add-to-cart-btn {
+    background: var(--color-orange);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(250, 70, 22, 0.3);
+}
+
+.add-to-cart-btn:hover {
+    background: var(--color-orange-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(250, 70, 22, 0.4);
+}

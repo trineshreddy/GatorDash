@@ -69,3 +69,51 @@
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(250, 70, 22, 0.2);
 }
+/* Navbar actions group */
+.navbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* Profile and Cart buttons */
+.nav-icon-btn {
+    padding: 8px 16px;
+    background: transparent;
+    color: var(--color-gray-300);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    position: relative;
+}
+
+.nav-icon-btn:hover {
+    color: var(--color-white);
+    border-color: var(--color-orange);
+    background: linear-gradient(90deg, rgba(250, 70, 22, 0.1), rgba(250, 70, 22, 0.05));
+    transform: translateY(-1px);
+}
+
+/* Cart badge */
+.cart-btn {
+    position: relative;
+}
+
+.cart-badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: var(--color-orange);
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}

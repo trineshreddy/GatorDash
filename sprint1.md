@@ -6,7 +6,6 @@
 ## Team Contributions
 - Backend: Raghul Siddarath Chandrasekar, Trinesh Reddy Bayapureddy Sannala
 - Frontend: Arvind Krishna Sundararajan
-  
 **Backend Tech Stack:**
 - Language: Go (Golang)
 - Database: PostgreSQL

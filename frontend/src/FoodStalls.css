@@ -193,3 +193,31 @@
     transform: translateX(4px);
     color: var(--color-orange);
 }
+.search-bar-container {
+    display: flex;
+    justify-content: center;
+    padding: 0 2rem 1.5rem 2rem;
+}
+
+.search-bar {
+    width: 100%;
+    max-width: 500px;
+    padding: 12px 18px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.2);
+    background: #0f2044;
+    color: #ffffff;
+    font-size: 1rem;
+    outline: none;
+}
+
+.search-bar:focus {
+    border-color: #e87722;
+}
+
+.no-results {
+    text-align: center;
+    color: #aaa;
+    font-size: 1rem;
+    padding: 2rem;
+}

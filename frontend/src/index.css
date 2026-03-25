@@ -68,4 +68,19 @@ a {
 input,
 button {
   font-family: inherit;
+  transition: all var(--transition-fast);
+}
+
+button {
+  cursor: pointer;
+}
+
+button:active {
+  transform: scale(0.98);
+}
+
+input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-orange-glow);
+  border-color: var(--color-orange);
 }
