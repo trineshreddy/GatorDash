@@ -110,28 +110,74 @@ func getEnv(key, defaultValue string) string {
 
 // seedInitialData inserts starter food stalls and menu items when empty.
 func seedInitialData() error {
-	var stallCount int64
-	if err := DB.Model(&models.FoodStall{}).Count(&stallCount).Error; err != nil {
-		return err
-	}
-	if stallCount > 0 {
-		return nil
+	// Seed richer starter data so the frontend has enough menu items.
+	const (
+		targetStalls = 7
+		menuPerStall = 10
+	)
+
+	stallNames := []struct {
+		id          string
+		name        string
+		description string
+	}{
+		{id: "stall_1", name: "Gator Bites", description: "Burgers, fries, and quick bites"},
+		{id: "stall_2", name: "Swamp Pizza", description: "Fresh pizzas and garlic bread"},
+		{id: "stall_3", name: "Dockside Wings", description: "Wings, sauces, and sides"},
+		{id: "stall_4", name: "Garden Grill", description: "Salads, bowls, and vegetarian options"},
+		{id: "stall_5", name: "Street Tacos", description: "Tacos, burritos, and salsas"},
+		{id: "stall_6", name: "Midnight Noodles", description: "Stir-fry noodles and fried rice"},
+		{id: "stall_7", name: "Sweet Treats", description: "Desserts, shakes, and snacks"},
 	}
 
-	stalls := []models.FoodStall{
-		{ID: "stall_1", Name: "Gator Bites", Description: "Burgers, fries, and quick bites", IsActive: true},
-		{ID: "stall_2", Name: "Swamp Pizza", Description: "Fresh pizzas and garlic bread", IsActive: true},
-	}
-	if err := DB.Create(&stalls).Error; err != nil {
-		return err
+	// 1) Ensure all stalls exist.
+	for i := 0; i < targetStalls; i++ {
+		id := stallNames[i].id
+		var existing models.FoodStall
+		if err := DB.First(&existing, "id = ?", id).Error; err == nil {
+			continue
+		}
+
+		newStall := models.FoodStall{
+			ID:          id,
+			Name:        stallNames[i].name,
+			Description: stallNames[i].description,
+			IsActive:    true,
+		}
+		if err := DB.Create(&newStall).Error; err != nil {
+			return err
+		}
 	}
 
+	// 2) Ensure each stall has 10 menu items.
 	now := time.Now()
-	menuItems := []models.MenuItem{
-		{ID: fmt.Sprintf("menu_%d", now.UnixNano()), FoodStallID: "stall_1", Name: "Classic Burger", Description: "Beef patty with cheese", Price: 9.99, IsAvailable: true},
-		{ID: fmt.Sprintf("menu_%d", now.UnixNano()+1), FoodStallID: "stall_1", Name: "Crispy Fries", Description: "Salted potato fries", Price: 3.99, IsAvailable: true},
-		{ID: fmt.Sprintf("menu_%d", now.UnixNano()+2), FoodStallID: "stall_2", Name: "Pepperoni Pizza", Description: "12-inch pepperoni pizza", Price: 12.49, IsAvailable: true},
-		{ID: fmt.Sprintf("menu_%d", now.UnixNano()+3), FoodStallID: "stall_2", Name: "Veggie Pizza", Description: "12-inch veggie pizza", Price: 11.49, IsAvailable: true},
+	for i := 1; i <= targetStalls; i++ {
+		stallID := fmt.Sprintf("stall_%d", i)
+
+		for j := 1; j <= menuPerStall; j++ {
+			menuID := fmt.Sprintf("menu_%d_%d", i, j)
+
+			var existingMenu models.MenuItem
+			if err := DB.First(&existingMenu, "id = ?", menuID).Error; err == nil {
+				continue
+			}
+
+			priceBase := 4.99 + float64(j)*0.85 + float64(i)*0.25
+			item := models.MenuItem{
+				ID:          menuID,
+				FoodStallID: stallID,
+				Name:        fmt.Sprintf("Item %d.%d", i, j),
+				Description: fmt.Sprintf("Specialty item from stall %d", i),
+				Price:       priceBase,
+				IsAvailable: true,
+				CreatedAt:   now,
+				UpdatedAt:   now,
+			}
+			if err := DB.Create(&item).Error; err != nil {
+				return err
+			}
+		}
 	}
-	return DB.Create(&menuItems).Error
+
+	return nil
 }
