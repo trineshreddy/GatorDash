@@ -7,7 +7,7 @@ GatorDash is a web-based food ordering platform that allows users to browse menu
 ## Team Members
 Front End:
 - Arvind Krishna Sundararajan
-  
-Back End:
 - Raghul Siddarath Chandrasekar
+  
+Back End
 - Trinesh Reddy Bayapureddy Sannala
