@@ -1,8 +1,8 @@
 # Sprint 2 – GatorDash
 
 ## Submission Details
-- Frontend Demo Video: [Link]
-- Backend Demo Video: [Link]
+- Frontend Demo Video: https://drive.google.com/file/d/1jX7lr0YoGXojkn5kgC1LFEqWi1KrCo37/view
+- Backend Demo Video:  https://drive.google.com/file/d/1wK8mj8ckc3jLcuo7_I7Cp1vUP4ydoLTL/view
 - GitHub Repository: https://github.com/as8313/SE-PROJECT-CEN5035-
 
 ## Team Contributions
