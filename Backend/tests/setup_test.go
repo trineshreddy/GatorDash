@@ -3,6 +3,7 @@ package tests
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -14,8 +15,8 @@ import (
 	"gatordash-backend/routes"
 	"gatordash-backend/store"
 
-	"github.com/glebarez/sqlite"
 	"github.com/gin-gonic/gin"
+	"github.com/glebarez/sqlite"
 	"gorm.io/gorm"
 )
 
@@ -82,17 +83,35 @@ func seedFoodData(t *testing.T, db *gorm.DB) {
 	stalls := []models.FoodStall{
 		{ID: "stall_1", Name: "Gator Bites", Description: "Burgers and fries", IsActive: true},
 		{ID: "stall_2", Name: "Swamp Pizza", Description: "Pizza and sides", IsActive: true},
+		{ID: "stall_3", Name: "Dockside Wings", Description: "Wings and sauces", IsActive: true},
+		{ID: "stall_4", Name: "Garden Grill", Description: "Salads and bowls", IsActive: true},
+		{ID: "stall_5", Name: "Street Tacos", Description: "Tacos and burritos", IsActive: true},
+		{ID: "stall_6", Name: "Midnight Noodles", Description: "Noodles and rice", IsActive: true},
+		{ID: "stall_7", Name: "Sweet Treats", Description: "Desserts and snacks", IsActive: true},
 	}
 	if err := db.Create(&stalls).Error; err != nil {
 		t.Fatalf("failed to seed stalls: %v", err)
 	}
 
-	menu := []models.MenuItem{
-		{ID: "menu_1", FoodStallID: "stall_1", Name: "Classic Burger", Description: "Burger", Price: 9.99, IsAvailable: true},
-		{ID: "menu_2", FoodStallID: "stall_1", Name: "Fries", Description: "Fries", Price: 3.49, IsAvailable: true},
+	// Seed 10 menu items per stall.
+	menu := make([]models.MenuItem, 0, 70)
+	for i := 1; i <= 7; i++ {
+		stallID := fmt.Sprintf("stall_%d", i)
+		for j := 1; j <= 10; j++ {
+			// Keep menu_1 and menu_2 as part of stall_1 (required by cart tests).
+			menuID := fmt.Sprintf("menu_%d", (i-1)*10+j)
+			menu = append(menu, models.MenuItem{
+				ID:          menuID,
+				FoodStallID: stallID,
+				Name:        fmt.Sprintf("Item %d.%d", i, j),
+				Description: fmt.Sprintf("Specialty item from stall %d", i),
+				Price:       5.0 + float64(j)*0.75 + float64(i)*0.25,
+				IsAvailable: true,
+			})
+		}
 	}
+
 	if err := db.Create(&menu).Error; err != nil {
 		t.Fatalf("failed to seed menu: %v", err)
 	}
 }
-

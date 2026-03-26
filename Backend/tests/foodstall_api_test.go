@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestFetchAllFoodStalls(t *testing.T) {
+func TestFetchFoodStalls(t *testing.T) {
 	router, db := setupTestRouter(t)
 	seedFoodData(t, db)
 
@@ -25,7 +25,7 @@ func TestFetchAllFoodStalls(t *testing.T) {
 	}
 }
 
-func TestGetMenuForSpecificFoodStall(t *testing.T) {
+func TestGetFoodMenu(t *testing.T) {
 	router, db := setupTestRouter(t)
 	seedFoodData(t, db)
 
@@ -43,4 +43,3 @@ func TestGetMenuForSpecificFoodStall(t *testing.T) {
 		t.Fatalf("expected menu items, got 0")
 	}
 }
-
