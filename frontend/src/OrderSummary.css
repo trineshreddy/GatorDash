@@ -174,3 +174,95 @@
     transform: translateY(-2px);
     box-shadow: var(--shadow-glow);
 }
+
+/* Loading State */
+.order-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 20px;
+    gap: 20px;
+}
+
+.order-loading p {
+    color: var(--color-gray-300);
+    font-size: 1.1rem;
+}
+
+.loading-spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid rgba(255, 255, 255, 0.1);
+    border-top: 4px solid var(--color-orange);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Order Confirmation Number */
+.order-number {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 20px;
+    padding: 16px 24px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: var(--radius-md);
+    display: inline-flex;
+}
+
+.order-number-label {
+    font-size: 0.85rem;
+    color: var(--color-gray-300);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.order-number-value {
+    font-family: var(--font-heading);
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--color-orange);
+    letter-spacing: 1px;
+}
+
+/* Pickup Estimate */
+.pickup-estimate {
+    font-size: 1rem;
+    color: var(--color-orange);
+    font-weight: 600;
+    margin-bottom: 32px;
+}
+
+/* Placing Order Button State */
+.place-order-btn.placing {
+    opacity: 0.7;
+    cursor: not-allowed;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.place-order-btn:disabled {
+    transform: none;
+    box-shadow: none;
+}
+
+.btn-spinner {
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-top: 3px solid var(--color-white);
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    display: inline-block;
+}
+
