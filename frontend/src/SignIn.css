@@ -152,3 +152,21 @@
 .signin-links a:hover {
     color: var(--color-orange-hover);
 }
+
+/* Forgot Password Link */
+.forgot-password-link {
+    text-align: center;
+    margin-top: 12px;
+    margin-bottom: 0;
+}
+
+.forgot-password-link a {
+    color: var(--color-gray-300);
+    text-decoration: none;
+    font-size: 0.85rem;
+    transition: color var(--transition-fast);
+}
+
+.forgot-password-link a:hover {
+    color: var(--color-orange);
+}
