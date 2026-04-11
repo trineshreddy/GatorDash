@@ -18,7 +18,6 @@ function App() {
     return localStorage.getItem('user') !== null;
   });
 
-  // SignUp form state
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -27,7 +26,6 @@ function App() {
   const [errors, setErrors] = useState({});
   const [passwordFocused, setPasswordFocused] = useState(false);
 
-  // Toast state
   const [toast, setToast] = useState({ message: '', type: 'success', visible: false });
 
   const showToast = (message, type) => {
@@ -52,7 +50,6 @@ function App() {
         showToast(data.message || 'Invalid credentials.', 'error');
       }
     } catch (err) {
-      // Backend not running — fall back to mock auth for testing
       if (emailInput === dummyUser.email && passwordInput === dummyUser.password) {
         localStorage.setItem('user', JSON.stringify({ name: 'Test User', email: emailInput }));
         setIsLoggedIn(true);
@@ -65,6 +62,7 @@ function App() {
 
   const handleLogout = () => {
     localStorage.removeItem('user');
+    localStorage.removeItem('cart');
     setIsLoggedIn(false);
     showToast('Signed out successfully.', 'success');
   };
