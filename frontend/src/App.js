@@ -10,6 +10,7 @@ import NotFound from './NotFound';
 import Toast from './Toast';
 import Profile from './Profile';
 import ForgotPassword from './ForgotPassword';
+import ResetPassword from './ResetPassword';
 import './App.css';
 
 const dummyUser = { email: 'user@example.com', password: 'Password123' };
@@ -146,6 +147,10 @@ function App() {
         <Route
           path="/forgot-password"
           element={<div className="page-transition"><ForgotPassword showToast={showToast} /></div>}
+        />
+        <Route
+          path="/reset-password"
+          element={<div className="page-transition"><ResetPassword showToast={showToast} /></div>}
         />
         <Route path="*" element={<div className="page-transition"><NotFound /></div>} />
       </Routes>
