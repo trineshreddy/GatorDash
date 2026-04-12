@@ -200,3 +200,55 @@ func TestEmptyCart(t *testing.T) {
 		t.Fatalf("expected empty cart, got %d items", len(cartItems))
 	}
 }
+
+func TestUpdateCartItemQuantity(t *testing.T) {
+	router, db := setupTestRouter(t)
+	seedFoodData(t, db)
+
+	signup := performRequest(router, http.MethodPost, "/api/signup", map[string]interface{}{
+		"name":     "Qty User",
+		"email":    "qtycart@example.com",
+		"phone":    "9999999995",
+		"password": "password123",
+	})
+	if signup.Code != http.StatusOK {
+		t.Fatalf("signup expected 200, got %d", signup.Code)
+	}
+
+	signupResp := parseResponse(t, signup)
+	var signupData map[string]interface{}
+	if err := json.Unmarshal(signupResp.Data, &signupData); err != nil {
+		t.Fatalf("failed to parse signup response: %v", err)
+	}
+	userID := signupData["id"].(string)
+
+	add := performRequest(router, http.MethodPost, "/api/cart/add", map[string]interface{}{
+		"user_id":      userID,
+		"menu_item_id": "menu_1",
+		"quantity":     2,
+	})
+	if add.Code != http.StatusOK {
+		t.Fatalf("add to cart expected 200, got %d", add.Code)
+	}
+
+	put := performRequest(router, http.MethodPut, "/api/cart/"+userID+"/item/menu_1", map[string]interface{}{
+		"quantity": 5,
+	})
+	if put.Code != http.StatusOK {
+		t.Fatalf("update cart quantity expected 200, got %d", put.Code)
+	}
+
+	view := performRequest(router, http.MethodGet, "/api/cart/"+userID, nil)
+	viewResp := parseResponse(t, view)
+	var cartItems []map[string]interface{}
+	if err := json.Unmarshal(viewResp.Data, &cartItems); err != nil {
+		t.Fatalf("failed to parse cart items: %v", err)
+	}
+	if len(cartItems) != 1 {
+		t.Fatalf("expected 1 cart item, got %d", len(cartItems))
+	}
+	qty, ok := cartItems[0]["quantity"].(float64)
+	if !ok || int(qty) != 5 {
+		t.Fatalf("expected quantity 5, got %v", cartItems[0]["quantity"])
+	}
+}
