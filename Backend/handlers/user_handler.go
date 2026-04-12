@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"time"
 
@@ -108,6 +110,93 @@ func (h *UserHandler) SignIn(c *gin.Context) {
 	userResponse.Password = ""
 
 	utils.SendSuccess(c, "Sign in successful", userResponse)
+}
+
+const passwordResetTokenBytes = 32
+const passwordResetTTL = time.Hour
+
+// ForgotPassword issues a short-lived reset token for the account (send via email in production).
+func (h *UserHandler) ForgotPassword(c *gin.Context) {
+	var req models.ForgotPasswordRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.SendError(c, 400, "Invalid request body")
+		return
+	}
+	if req.Email == "" {
+		utils.SendError(c, 400, "Email is required")
+		return
+	}
+
+	user, exists := h.userStore.GetUserByEmail(req.Email)
+	if !exists {
+		utils.SendError(c, 404, "User not found")
+		return
+	}
+
+	if err := h.userStore.DeletePasswordResetsByUserID(user.ID); err != nil {
+		utils.SendError(c, 500, err.Error())
+		return
+	}
+
+	buf := make([]byte, passwordResetTokenBytes)
+	if _, err := rand.Read(buf); err != nil {
+		utils.SendError(c, 500, "Failed to generate reset token")
+		return
+	}
+	token := hex.EncodeToString(buf)
+	expiresAt := time.Now().Add(passwordResetTTL)
+	now := time.Now()
+
+	pr := &models.PasswordReset{
+		ID:        fmt.Sprintf("pr_%d", now.UnixNano()),
+		UserID:    user.ID,
+		Token:     token,
+		ExpiresAt: expiresAt,
+		CreatedAt: now,
+	}
+	if err := h.userStore.CreatePasswordReset(pr); err != nil {
+		utils.SendError(c, 500, err.Error())
+		return
+	}
+
+	utils.SendSuccess(c, "Password reset token issued", map[string]interface{}{
+		"reset_token": token,
+		"expires_at":  expiresAt.UTC().Format(time.RFC3339),
+	})
+}
+
+// ResetPassword completes password recovery using a valid token.
+func (h *UserHandler) ResetPassword(c *gin.Context) {
+	var req models.ResetPasswordRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.SendError(c, 400, "Invalid request body")
+		return
+	}
+	if req.Token == "" || req.NewPassword == "" {
+		utils.SendError(c, 400, "token and new_password are required")
+		return
+	}
+
+	pr, ok := h.userStore.FindValidPasswordReset(req.Token)
+	if !ok {
+		utils.SendError(c, 400, "Invalid or expired reset token")
+		return
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.NewPassword), bcrypt.DefaultCost)
+	if err != nil {
+		utils.SendError(c, 500, "Failed to hash password")
+		return
+	}
+
+	if err := h.userStore.UpdateUserPassword(pr.UserID, string(hashedPassword)); err != nil {
+		utils.SendError(c, 500, err.Error())
+		return
+	}
+
+	_ = h.userStore.DeletePasswordResetsByUserID(pr.UserID)
+
+	utils.SendSuccess(c, "Password reset successfully", nil)
 }
 
 // GetUser retrieves a user by ID
@@ -218,6 +307,5 @@ func (h *UserHandler) DeleteUser(c *gin.Context) {
 		return
 	}
 
-	
 	utils.SendSuccess(c, "User deleted successfully", nil)
 }

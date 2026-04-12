@@ -53,6 +53,11 @@ type AddToCartRequest struct {
 	Quantity   int    `json:"quantity"`
 }
 
+// UpdateCartQuantityRequest sets absolute quantity for a cart line.
+type UpdateCartQuantityRequest struct {
+	Quantity int `json:"quantity"`
+}
+
 // CartItemResponse is returned when viewing cart details.
 type CartItemResponse struct {
 	ID         string  `json:"id"`

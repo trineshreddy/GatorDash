@@ -1,6 +1,7 @@
 package store
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -9,6 +10,9 @@ import (
 
 	"gorm.io/gorm"
 )
+
+// ErrCartItemNotFound is returned when updating quantity for a missing cart line.
+var ErrCartItemNotFound = errors.New("cart item not found")
 
 // FoodStore handles food stalls, menu, and cart operations.
 type FoodStore struct {
@@ -58,6 +62,24 @@ func (s *FoodStore) GetMenuItemByID(menuItemID string) (*models.MenuItem, bool) 
 	return &item, true
 }
 
+// GetAllMenuItems returns every menu item across all stalls.
+func (s *FoodStore) GetAllMenuItems() ([]models.MenuItem, error) {
+	var items []models.MenuItem
+	if err := s.db.Order("food_stall_id ASC, name ASC").Find(&items).Error; err != nil {
+		return nil, fmt.Errorf("failed to fetch menu items: %w", err)
+	}
+	return items, nil
+}
+
+// GetMenuItemsByName returns items whose name matches case-insensitively (exact match).
+func (s *FoodStore) GetMenuItemsByName(name string) ([]models.MenuItem, error) {
+	var items []models.MenuItem
+	if err := s.db.Where("LOWER(name) = LOWER(?)", name).Order("food_stall_id ASC, name ASC").Find(&items).Error; err != nil {
+		return nil, fmt.Errorf("failed to fetch menu items by name: %w", err)
+	}
+	return items, nil
+}
+
 // AddToCart creates a cart item or increments quantity if it exists.
 func (s *FoodStore) AddToCart(userID, menuItemID string, quantity int) error {
 	var cartItem models.CartItem
@@ -65,7 +87,7 @@ func (s *FoodStore) AddToCart(userID, menuItemID string, quantity int) error {
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			newItem := models.CartItem{
-				ID:         fmt.Sprintf("cart_%d", time.Now().UnixNano()),
+				ID:         fmt.Sprintf("cart_%d_%s", time.Now().UnixNano(), menuItemID),
 				UserID:     userID,
 				MenuItemID: menuItemID,
 				Quantity:   quantity,
@@ -112,6 +134,27 @@ func (s *FoodStore) GetCartItems(userID string) ([]models.CartItemResponse, erro
 	}
 
 	return response, nil
+}
+
+// UpdateCartItemQuantity sets the quantity for an existing cart line.
+func (s *FoodStore) UpdateCartItemQuantity(userID, menuItemID string, quantity int) error {
+	if quantity <= 0 {
+		return fmt.Errorf("quantity must be greater than 0")
+	}
+	var cartItem models.CartItem
+	err := s.db.Where("user_id = ? AND menu_item_id = ?", userID, menuItemID).First(&cartItem).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return ErrCartItemNotFound
+		}
+		return fmt.Errorf("failed to load cart item: %w", err)
+	}
+	cartItem.Quantity = quantity
+	cartItem.UpdatedAt = time.Now()
+	if err := s.db.Save(&cartItem).Error; err != nil {
+		return fmt.Errorf("failed to update cart quantity: %w", err)
+	}
+	return nil
 }
 
 // RemoveCartItem removes a specific item from a user's cart.

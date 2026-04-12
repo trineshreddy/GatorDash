@@ -157,3 +157,41 @@ func TestDeleteUser(t *testing.T) {
 		t.Fatalf("expected 404 after delete, got %d", get.Code)
 	}
 }
+
+func TestForgotAndResetPassword(t *testing.T) {
+	router, _ := setupTestRouter(t)
+	email := "resetme@example.com"
+	signupUserAndGetID(t, router, email)
+
+	forgot := performRequest(router, http.MethodPost, "/api/forgot-password", map[string]interface{}{
+		"email": email,
+	})
+	if forgot.Code != http.StatusOK {
+		t.Fatalf("forgot password expected 200, got %d", forgot.Code)
+	}
+	resp := parseResponse(t, forgot)
+	var data map[string]interface{}
+	if err := json.Unmarshal(resp.Data, &data); err != nil {
+		t.Fatalf("parse forgot data: %v", err)
+	}
+	token, _ := data["reset_token"].(string)
+	if token == "" {
+		t.Fatalf("expected reset_token in response")
+	}
+
+	reset := performRequest(router, http.MethodPost, "/api/reset-password", map[string]interface{}{
+		"token":        token,
+		"new_password": "brandNewSecret456",
+	})
+	if reset.Code != http.StatusOK {
+		t.Fatalf("reset password expected 200, got %d", reset.Code)
+	}
+
+	signin := performRequest(router, http.MethodPost, "/api/signin", map[string]interface{}{
+		"email":    email,
+		"password": "brandNewSecret456",
+	})
+	if signin.Code != http.StatusOK {
+		t.Fatalf("signin with new password expected 200, got %d", signin.Code)
+	}
+}

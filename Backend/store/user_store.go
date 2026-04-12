@@ -1,4 +1,5 @@
 package store
+
 import (
 	"fmt"
 	"time"
@@ -122,5 +123,44 @@ func (s *UserStore) DeleteUser(id string) error {
 		return fmt.Errorf("failed to delete user: %w", result.Error)
 	}
 
+	return nil
+}
+
+// DeletePasswordResetsByUserID removes existing reset tokens for a user.
+func (s *UserStore) DeletePasswordResetsByUserID(userID string) error {
+	if err := s.db.Where("user_id = ?", userID).Delete(&models.PasswordReset{}).Error; err != nil {
+		return fmt.Errorf("failed to clear password resets: %w", err)
+	}
+	return nil
+}
+
+// CreatePasswordReset stores a new reset token.
+func (s *UserStore) CreatePasswordReset(rec *models.PasswordReset) error {
+	if err := s.db.Create(rec).Error; err != nil {
+		return fmt.Errorf("failed to create password reset: %w", err)
+	}
+	return nil
+}
+
+// FindValidPasswordReset returns a non-expired reset row for the given token.
+func (s *UserStore) FindValidPasswordReset(token string) (*models.PasswordReset, bool) {
+	var pr models.PasswordReset
+	if err := s.db.Where("token = ? AND expires_at > ?", token, time.Now()).First(&pr).Error; err != nil {
+		return nil, false
+	}
+	return &pr, true
+}
+
+// UpdateUserPassword sets password hash for a user (already hashed by handler).
+func (s *UserStore) UpdateUserPassword(userID, hashedPassword string) error {
+	var user models.User
+	if err := s.db.First(&user, "id = ?", userID).Error; err != nil {
+		return fmt.Errorf("user with id %s not found", userID)
+	}
+	user.Password = hashedPassword
+	user.UpdatedAt = time.Now()
+	if err := s.db.Save(&user).Error; err != nil {
+		return fmt.Errorf("failed to update password: %w", err)
+	}
 	return nil
 }

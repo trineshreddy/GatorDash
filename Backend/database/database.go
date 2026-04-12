@@ -81,6 +81,7 @@ func InitDB() error {
 		&models.FoodStall{},
 		&models.MenuItem{},
 		&models.CartItem{},
+		&models.PasswordReset{},
 	)
 	if err != nil {
 		return fmt.Errorf("failed to migrate database: %w", err)
