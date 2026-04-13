@@ -16,6 +16,8 @@ func SetupRoutes(userHandler *handlers.UserHandler, foodHandler *handlers.FoodHa
 	{
 		api.POST("/signup", userHandler.SignUp)
 		api.POST("/signin", userHandler.SignIn)
+		api.POST("/forgot-password", userHandler.ForgotPassword)
+		api.POST("/reset-password", userHandler.ResetPassword)
 		api.GET("/users", userHandler.GetAllUsers)
 		api.GET("/user/:id", userHandler.GetUser)
 		api.PUT("/user/:id", userHandler.UpdateUser)
@@ -24,10 +26,13 @@ func SetupRoutes(userHandler *handlers.UserHandler, foodHandler *handlers.FoodHa
 		// Food stalls and menu
 		api.GET("/foodstalls", foodHandler.GetAllFoodStalls)
 		api.GET("/foodstalls/:id/menu", foodHandler.GetFoodStallMenu)
+		api.GET("/menu-items/by-name", foodHandler.GetMenuItemsByName)
+		api.GET("/menu-items", foodHandler.GetAllMenuItems)
 
 		// Cart
 		api.POST("/cart/add", foodHandler.AddToCart)
 		api.GET("/cart/:user_id", foodHandler.GetCartItems)
+		api.PUT("/cart/:user_id/item/:menu_item_id", foodHandler.UpdateCartItemQuantity)
 		api.DELETE("/cart/:user_id/item/:menu_item_id", foodHandler.RemoveCartItem)
 		api.DELETE("/cart/:user_id/clear", foodHandler.ClearCart)
 	}

@@ -1,19 +1,20 @@
-/*Navbar  */
+/* Navbar */
 .navbar {
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 16px 32px;
-    background: var(--glass-bg);
-    backdrop-filter: blur(var(--glass-blur));
-    -webkit-backdrop-filter: blur(var(--glass-blur));
-    border-bottom: 1px solid var(--glass-border);
+    background: var(--glass-bg, rgba(10, 22, 40, 0.85));
+    backdrop-filter: blur(var(--glass-blur, 12px));
+    -webkit-backdrop-filter: blur(var(--glass-blur, 12px));
+    border-bottom: 1px solid var(--glass-border, rgba(255,255,255,0.08));
     position: sticky;
     top: 0;
     z-index: 100;
+    flex-wrap: wrap;
 }
 
-/*Brand */
+/* Brand */
 .navbar-brand {
     font-family: var(--font-heading);
     font-size: 1.5rem;
@@ -28,76 +29,56 @@
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    background: var(--color-navy);
+    background: var(--color-navy, #001845);
     padding: 4px;
     object-fit: contain;
-    box-shadow: 0 0 10px var(--color-orange-glow);
-    transition: transform var(--transition-fast);
+    box-shadow: 0 0 10px rgba(232, 119, 34, 0.4);
+    transition: transform 0.15s;
 }
 
 .brand-logo:hover {
     transform: scale(1.1) rotate(-5deg);
 }
 
-.brand-gator {
-    color: var(--color-white);
-}
+.brand-gator { color: var(--color-white, #fff); }
+.brand-dash { color: var(--color-orange, #FA4616); }
 
-.brand-dash {
-    color: var(--color-orange);
-}
-
-/*  Sign Out Button */
-.signout-btn {
-    padding: 8px 24px;
-    background: transparent;
-    color: var(--color-gray-300);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 20px;
-    font-size: 0.9rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all var(--transition-normal);
-    position: relative;
-    overflow: hidden;
-}
-
-.signout-btn:hover {
-    color: var(--color-white);
-    border-color: var(--color-orange);
-    background: linear-gradient(90deg, rgba(250, 70, 22, 0.1), rgba(250, 70, 22, 0.05));
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(250, 70, 22, 0.2);
-}
-/* Navbar actions group */
+/* Desktop Nav Actions */
 .navbar-actions {
     display: flex;
     align-items: center;
     gap: 12px;
 }
 
-/* Profile and Cart buttons */
+/* Nav Buttons */
 .nav-icon-btn {
     padding: 8px 16px;
     background: transparent;
-    color: var(--color-gray-300);
+    color: var(--color-gray-300, #aaa);
     border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 20px;
     font-size: 0.9rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all var(--transition-normal);
+    transition: all 0.2s;
     position: relative;
 }
 
 .nav-icon-btn:hover {
-    color: var(--color-white);
-    border-color: var(--color-orange);
+    color: var(--color-white, #fff);
+    border-color: var(--color-orange, #FA4616);
     background: linear-gradient(90deg, rgba(250, 70, 22, 0.1), rgba(250, 70, 22, 0.05));
     transform: translateY(-1px);
 }
 
-/* Cart badge */
+/* Active Route Highlight */
+.nav-icon-btn.active-route {
+    color: #ffffff;
+    border-color: var(--color-orange, #FA4616);
+    background: rgba(250, 70, 22, 0.15);
+}
+
+/* Cart Button */
 .cart-btn {
     position: relative;
 }
@@ -106,7 +87,7 @@
     position: absolute;
     top: -8px;
     right: -8px;
-    background: var(--color-orange);
+    background: var(--color-orange, #FA4616);
     color: white;
     border-radius: 50%;
     width: 20px;
@@ -116,4 +97,112 @@
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+/* Sign Out Button */
+.signout-btn {
+    padding: 8px 24px;
+    background: transparent;
+    color: var(--color-gray-300, #aaa);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.signout-btn:hover {
+    color: var(--color-white, #fff);
+    border-color: var(--color-orange, #FA4616);
+    background: linear-gradient(90deg, rgba(250, 70, 22, 0.1), rgba(250, 70, 22, 0.05));
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(250, 70, 22, 0.2);
+}
+
+/* Hamburger Button - hidden on desktop */
+.hamburger-btn {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 6px;
+}
+
+.ham-line {
+    display: block;
+    width: 24px;
+    height: 2px;
+    background: #ffffff;
+    border-radius: 2px;
+    transition: all 0.3s ease;
+}
+
+.ham-line.open:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.ham-line.open:nth-child(2) { opacity: 0; }
+.ham-line.open:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+/* Mobile Menu Dropdown */
+.mobile-menu {
+    display: none;
+    flex-direction: column;
+    width: 100%;
+    background: rgba(10, 22, 40, 0.97);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.mobile-nav-btn {
+    padding: 14px 32px;
+    background: transparent;
+    color: var(--color-gray-300, #aaa);
+    border: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    text-align: left;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.mobile-nav-btn:hover {
+    background: rgba(250, 70, 22, 0.08);
+    color: #ffffff;
+}
+
+.mobile-nav-btn.active-route {
+    color: #e87722;
+    border-left: 3px solid #e87722;
+}
+
+.signout-mobile {
+    color: #e74c3c;
+    margin-top: 4px;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .navbar {
+        padding: 14px 20px;
+    }
+
+    .desktop-nav {
+        display: none;
+    }
+
+    .hamburger-btn {
+        display: flex;
+    }
+
+    .mobile-menu {
+        display: flex;
+    }
 }

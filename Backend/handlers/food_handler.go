@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"errors"
+
 	"gatordash-backend/models"
 	"gatordash-backend/store"
 	"gatordash-backend/utils"
@@ -52,6 +54,37 @@ func (h *FoodHandler) GetFoodStallMenu(c *gin.Context) {
 	}
 
 	utils.SendSuccess(c, "Menu retrieved successfully", items)
+}
+
+// GetAllMenuItems returns all menu items from every stall.
+func (h *FoodHandler) GetAllMenuItems(c *gin.Context) {
+	items, err := h.foodStore.GetAllMenuItems()
+	if err != nil {
+		utils.SendError(c, 500, err.Error())
+		return
+	}
+	utils.SendSuccess(c, "Menu items retrieved successfully", items)
+}
+
+// GetMenuItemsByName returns menu items matching the name query (case-insensitive exact match).
+func (h *FoodHandler) GetMenuItemsByName(c *gin.Context) {
+	name := c.Query("name")
+	if name == "" {
+		utils.SendError(c, 400, "Query parameter name is required")
+		return
+	}
+
+	items, err := h.foodStore.GetMenuItemsByName(name)
+	if err != nil {
+		utils.SendError(c, 500, err.Error())
+		return
+	}
+	if len(items) == 0 {
+		utils.SendError(c, 404, "No menu items found with that name")
+		return
+	}
+
+	utils.SendSuccess(c, "Menu items retrieved successfully", items)
 }
 
 // AddToCart adds items to user cart.
@@ -131,6 +164,42 @@ func (h *FoodHandler) RemoveCartItem(c *gin.Context) {
 	}
 
 	utils.SendSuccess(c, "Cart item removed successfully", nil)
+}
+
+// UpdateCartItemQuantity sets quantity for a cart line.
+func (h *FoodHandler) UpdateCartItemQuantity(c *gin.Context) {
+	userID := c.Param("user_id")
+	menuItemID := c.Param("menu_item_id")
+	if userID == "" || menuItemID == "" {
+		utils.SendError(c, 400, "User ID and menu item ID are required")
+		return
+	}
+
+	var req models.UpdateCartQuantityRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.SendError(c, 400, "Invalid request body")
+		return
+	}
+	if req.Quantity <= 0 {
+		utils.SendError(c, 400, "quantity must be greater than 0")
+		return
+	}
+
+	if _, exists := h.userStore.GetUserByID(userID); !exists {
+		utils.SendError(c, 404, "User not found")
+		return
+	}
+
+	if err := h.foodStore.UpdateCartItemQuantity(userID, menuItemID, req.Quantity); err != nil {
+		if errors.Is(err, store.ErrCartItemNotFound) {
+			utils.SendError(c, 404, err.Error())
+			return
+		}
+		utils.SendError(c, 500, err.Error())
+		return
+	}
+
+	utils.SendSuccess(c, "Cart quantity updated successfully", nil)
 }
 
 // ClearCart removes all items from a user cart.
