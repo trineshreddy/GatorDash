@@ -11,6 +11,7 @@ import Toast from './Toast';
 import Profile from './Profile';
 import ForgotPassword from './ForgotPassword';
 import ResetPassword from './ResetPassword';
+import OrderHistory from './OrderHistory';
 import './App.css';
 
 const dummyUser = { email: 'user@example.com', password: 'Password123' };
@@ -151,6 +152,14 @@ function App() {
         <Route
           path="/reset-password"
           element={<div className="page-transition"><ResetPassword showToast={showToast} /></div>}
+        />
+        <Route
+          path="/order-history"
+          element={
+            isLoggedIn
+              ? <div className="page-transition"><OrderHistory onLogout={handleLogout} /></div>
+              : <Navigate to="/signin" />
+          }
         />
         <Route path="*" element={<div className="page-transition"><NotFound /></div>} />
       </Routes>
