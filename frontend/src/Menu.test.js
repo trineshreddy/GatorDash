@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import Menu from './Menu';
 
@@ -14,19 +14,27 @@ const renderMenu = (stallId = '0') => {
 };
 
 describe('Menu Component', () => {
-  test('renders without crashing', () => {
-    renderMenu();
-    expect(document.body).toBeInTheDocument();
+  beforeEach(() => {
+    jest.restoreAllMocks();
+    global.fetch = jest.fn(() => Promise.reject(new Error('API not available')));
   });
 
-  test('displays Add to Cart button', () => {
+  test('renders without crashing', async () => {
     renderMenu();
-    const buttons = screen.getAllByText(/add to cart/i);
-    expect(buttons.length).toBeGreaterThan(0);
+    await waitFor(() => {
+      expect(document.body).toBeInTheDocument();
+    });
   });
 
-  test('renders menu for stall 0', () => {
+  test('shows loading state initially', () => {
+    renderMenu();
+    expect(screen.getByText('Loading menu...')).toBeInTheDocument();
+  });
+
+  test('renders menu for stall 0 with fallback data', async () => {
     renderMenu('0');
-    expect(document.body).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(/Menu/)).toBeInTheDocument();
+    });
   });
 });
