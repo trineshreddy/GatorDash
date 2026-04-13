@@ -98,7 +98,7 @@ function Cart({ onLogout, showToast }) {
         if (user.id) {
             try {
                 // Try PUT update first
-                let response = await fetch(`/api/cart/update/${user.id}/${itemId}`, {
+                let response = await fetch(`/api/cart/${user.id}/item/${itemId}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ quantity: newQty }),

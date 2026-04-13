@@ -22,7 +22,9 @@ describe('OrderHistory Component', () => {
         await act(async () => {
             renderOrderHistory();
         });
-        expect(screen.getByText('Order History')).toBeInTheDocument();
+        const heading = document.querySelector('.history-header h2');
+        expect(heading).toBeInTheDocument();
+        expect(heading.textContent).toBe('Order History');
     });
 
     test('renders back to restaurants button', async () => {
