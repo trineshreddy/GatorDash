@@ -60,6 +60,10 @@ function SignIn({ onSignIn }) {
 
                 <button className="signin-btn" type="submit">Sign In</button>
 
+                <p className="forgot-password-link">
+                    <Link to="/forgot-password">Forgot Password?</Link>
+                </p>
+
                 <p className="signin-links">
                     Don't have an account? <Link to="/signup">Sign up here</Link>
                 </p>

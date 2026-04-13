@@ -60,6 +60,8 @@ function SignUp({
             newErrors.email = 'Email is required';
         } else if (!/^\S+@\S+\.\S+$/.test(email)) {
             newErrors.email = 'Enter a valid email';
+        } else if (!email.endsWith('.edu')) {
+            newErrors.email = 'Please use your university email (.edu)';
         }
 
         // Password validation
@@ -75,7 +77,7 @@ function SignUp({
 
         // Confirm Password validation
         if (!confirmPassword) {
-            newErrors.confirmPassword = 'confirmation of password required';
+            newErrors.confirmPassword = 'Please confirm your password';
         } else if (confirmPassword !== password) {
             newErrors.confirmPassword = 'Passwords do not match';
         }

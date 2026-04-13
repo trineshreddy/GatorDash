@@ -48,7 +48,6 @@ describe('Menu Component', () => {
     test('quantity selector increments correctly', async () => {
         renderMenu();
         await waitFor(() => expect(screen.getByText('Iced Latte')).toBeInTheDocument());
-
         const plusBtns = screen.getAllByText('+');
         fireEvent.click(plusBtns[0]);
         const displays = screen.getAllByText('1');
@@ -58,7 +57,6 @@ describe('Menu Component', () => {
     test('quantity selector decrements correctly', async () => {
         renderMenu();
         await waitFor(() => expect(screen.getByText('Iced Latte')).toBeInTheDocument());
-
         const plusBtns = screen.getAllByText('+');
         fireEvent.click(plusBtns[0]);
         const minusBtns = screen.getAllByText('−');
@@ -70,7 +68,6 @@ describe('Menu Component', () => {
     test('"Add to Cart" button appears only when quantity > 0', async () => {
         renderMenu();
         await waitFor(() => expect(screen.getByText('Iced Latte')).toBeInTheDocument());
-
         expect(screen.queryByText('Add to Cart')).not.toBeInTheDocument();
         const plusBtns = screen.getAllByText('+');
         fireEvent.click(plusBtns[0]);
@@ -80,11 +77,9 @@ describe('Menu Component', () => {
     test('"Add to Cart" calls POST /api/cart/add with correct payload', async () => {
         renderMenu();
         await waitFor(() => expect(screen.getByText('Iced Latte')).toBeInTheDocument());
-
         const plusBtns = screen.getAllByText('+');
         fireEvent.click(plusBtns[0]);
         fireEvent.click(screen.getByText('Add to Cart'));
-
         await waitFor(() => {
             const calls = global.fetch.mock.calls;
             const cartCall = calls.find(c => c[0] === '/api/cart/add');
@@ -98,7 +93,6 @@ describe('Menu Component', () => {
     test('falls back to hardcoded data when API fails', async () => {
         jest.restoreAllMocks();
         jest.spyOn(global, 'fetch').mockRejectedValue(new Error('Network error'));
-
         renderMenu('0');
         await waitFor(() => {
             expect(screen.getByText('Iced Latte')).toBeInTheDocument();
@@ -108,7 +102,6 @@ describe('Menu Component', () => {
     test('renders without crashing for unknown stall', async () => {
         jest.restoreAllMocks();
         jest.spyOn(global, 'fetch').mockRejectedValue(new Error('Network error'));
-
         renderMenu('999');
         await waitFor(() => expect(document.body).toBeInTheDocument());
     });

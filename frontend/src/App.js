@@ -9,6 +9,9 @@ import OrderSummary from './OrderSummary';
 import NotFound from './NotFound';
 import Toast from './Toast';
 import Profile from './Profile';
+import ForgotPassword from './ForgotPassword';
+import ResetPassword from './ResetPassword';
+import OrderHistory from './OrderHistory';
 import './App.css';
 
 const dummyUser = { email: 'user@example.com', password: 'Password123' };
@@ -53,7 +56,7 @@ function App() {
       if (emailInput === dummyUser.email && passwordInput === dummyUser.password) {
         localStorage.setItem('user', JSON.stringify({ name: 'Test User', email: emailInput }));
         setIsLoggedIn(true);
-        showToast('Welcome to GatorDash! (mock mode)', 'success');
+        showToast('Welcome to GatorDash!', 'success');
       } else {
         showToast('Invalid credentials. Please try again.', 'error');
       }
@@ -139,6 +142,22 @@ function App() {
           element={
             isLoggedIn
               ? <div className="page-transition"><Profile onLogout={handleLogout} showToast={showToast} /></div>
+              : <Navigate to="/signin" />
+          }
+        />
+        <Route
+          path="/forgot-password"
+          element={<div className="page-transition"><ForgotPassword showToast={showToast} /></div>}
+        />
+        <Route
+          path="/reset-password"
+          element={<div className="page-transition"><ResetPassword showToast={showToast} /></div>}
+        />
+        <Route
+          path="/order-history"
+          element={
+            isLoggedIn
+              ? <div className="page-transition"><OrderHistory onLogout={handleLogout} /></div>
               : <Navigate to="/signin" />
           }
         />
