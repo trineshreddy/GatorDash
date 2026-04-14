@@ -207,18 +207,18 @@ Tested using Go's `testing` and `httptest` packages with in-memory SQLite databa
 | `TestFetchUser` | `user_api_test.go` | ✅ Passed | Retrieves user by ID after signup |
 | `TestEditUser` | `user_api_test.go` | ✅ Passed | Updates name/phone, re-fetches and verifies changes |
 | `TestDeleteUser` | `user_api_test.go` | ✅ Passed | Deletes user, confirms 404 on subsequent GET |
-| `TestForgotAndResetPassword` | `user_api_test.go` | ✅ Passed | **[NEW]** Full flow: signup → forgot → extract token → reset → sign in with new password |
+| `TestForgotAndResetPassword` | `user_api_test.go` | ✅ Passed |  Full flow: signup → forgot → extract token → reset → sign in with new password |
 | `TestFetchFoodStalls` | `foodstall_api_test.go` | ✅ Passed | Seeds 7 stalls, verifies non-empty response |
 | `TestGetFoodMenu` | `foodstall_api_test.go` | ✅ Passed | Fetches menu for `stall_1`, verifies items exist |
-| `TestGetAllMenuItems` | `menu_api_test.go` | ✅ Passed | **[NEW]** Verifies all 70 seeded menu items returned |
-| `TestGetMenuItemsByName` | `menu_api_test.go` | ✅ Passed | **[NEW]** Searches "Item 1.1", verifies exact match |
-| `TestGetMenuItemsByNameMissingQuery` | `menu_api_test.go` | ✅ Passed | **[NEW]** Verifies 400 when `?name=` is missing |
-| `TestGetMenuItemsByNameNotFound` | `menu_api_test.go` | ✅ Passed | **[NEW]** Verifies 404 for nonexistent item |
+| `TestGetAllMenuItems` | `menu_api_test.go` | ✅ Passed |  Verifies all 70 seeded menu items returned |
+| `TestGetMenuItemsByName` | `menu_api_test.go` | ✅ Passed | Searches "Item 1.1", verifies exact match |
+| `TestGetMenuItemsByNameMissingQuery` | `menu_api_test.go` | ✅ Passed |  Verifies 400 when `?name=` is missing |
+| `TestGetMenuItemsByNameNotFound` | `menu_api_test.go` | ✅ Passed | Verifies 404 for nonexistent item |
 | `TestAddItemsToCart` | `cart_api_test.go` | ✅ Passed | Adds item, verifies cart has 1 item |
 | `TestFetchCartItems` | `cart_api_test.go` | ✅ Passed | Adds 2 items, verifies cart has 2 items |
 | `TestDeleteItemFromCart` | `cart_api_test.go` | ✅ Passed | Adds then removes item, verifies empty cart |
 | `TestEmptyCart` | `cart_api_test.go` | ✅ Passed | Adds item then clears cart, verifies empty |
-| `TestUpdateCartItemQuantity` | `cart_api_test.go` | ✅ Passed | **[NEW]** Adds item (qty 2), updates to qty 5, verifies |
+| `TestUpdateCartItemQuantity` | `cart_api_test.go` | ✅ Passed | Adds item (qty 2), updates to qty 5, verifies |
 
 **Backend test summary: 17 tests across 5 files (6 new in Sprint 3), all passing.**
 
