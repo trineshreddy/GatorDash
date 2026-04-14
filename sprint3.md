@@ -121,9 +121,9 @@ In Sprint 3, our team aimed to:
 ### Frontend
 - ✅ **Cart** fully integrated with backend: `GET /api/cart/:user_id`, `PUT` update quantity, `DELETE` remove item, `DELETE /clear`, localStorage fallback, loading spinner, error state with retry, empty state
 - ✅ **OrderSummary** integrated with backend: fetches cart from API, places order via `POST /api/order/place`, clears backend cart, shows confirmation number + estimated pickup time (15–20 min)
-- ✅ **ForgotPassword page [NEW]:** email validation, `POST /api/forgot-password`, success screen with "Check Your Email" message, mock fallback, loading spinner button
-- ✅ **ResetPassword page [NEW]:** reads token from URL `?token=...`, password strength meter (Weak/Fair/Strong), `POST /api/reset-password`, success screen with auto-redirect countdown to Sign In, password visibility toggle
-- ✅ **OrderHistory page [NEW]:** expandable order cards with status badges (Delivered/Preparing/Cancelled/Ready), date formatting, item breakdown with prices, "Order Again" button for delivered orders, empty state with "Browse Restaurants"
+- ✅ **ForgotPassword** page  email validation, `POST /api/forgot-password`, success screen with "Check Your Email" message, mock fallback, loading spinner button
+- ✅ **ResetPassword** page reads token from URL `?token=...`, password strength meter (Weak/Fair/Strong), `POST /api/reset-password`, success screen with auto-redirect countdown to Sign In, password visibility toggle
+- ✅ **OrderHistory** page expandable order cards with status badges (Delivered/Preparing/Cancelled/Ready), date formatting, item breakdown with prices, "Order Again" button for delivered orders, empty state with "Browse Restaurants"
 - ✅ **FoodStalls** connected to `GET /api/foodstalls` with hardcoded fallback
 - ✅ **Menu** connected to `GET /api/foodstalls/:id/menu` + Add to Cart calls `POST /api/cart/add`
 - ✅ **Navbar** updated with Order History link, logout clears localStorage
@@ -149,33 +149,33 @@ In Sprint 3, our team aimed to:
 ## Backend API Documentation
 
 ### Authentication & User Management
-| Endpoint | Method | Description | New in Sprint 3? |
-|----------|--------|-------------|:-:|
-| `/api/signup` | POST | Register a new user | |
-| `/api/signin` | POST | Authenticate user | |
-| `/api/forgot-password` | POST | Issue password reset token | ✅ |
-| `/api/reset-password` | POST | Reset password using valid token | ✅ |
-| `/api/users` | GET | Get all users | |
-| `/api/user/:id` | GET | Get user by ID | |
-| `/api/user/:id` | PUT | Update user details | |
-| `/api/user/:id` | DELETE | Delete a user | |
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/signup` | POST | Register a new user |
+| `/api/signin` | POST | Authenticate user |
+| `/api/forgot-password` | POST | Issue password reset token |
+| `/api/reset-password` | POST | Reset password using valid token |
+| `/api/users` | GET | Get all users |
+| `/api/user/:id` | GET | Get user by ID |
+| `/api/user/:id` | PUT | Update user details |
+| `/api/user/:id` | DELETE | Delete a user |
 
 ### Food Stalls & Menu
-| Endpoint | Method | Description | New in Sprint 3? |
-|----------|--------|-------------|:-:|
-| `/api/foodstalls` | GET | Fetch all food stalls | |
-| `/api/foodstalls/:id/menu` | GET | Get menu for a stall | |
-| `/api/menu-items` | GET | Get all menu items from all stalls | ✅ |
-| `/api/menu-items/by-name?name=...` | GET | Search menu items by name (case-insensitive) | ✅ |
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/foodstalls` | GET | Fetch all food stalls |
+| `/api/foodstalls/:id/menu` | GET | Get menu for a stall |
+| `/api/menu-items` | GET | Get all menu items from all stalls |
+| `/api/menu-items/by-name?name=...` | GET | Search menu items by name (case-insensitive) |
 
 ### Cart Management
-| Endpoint | Method | Description | New in Sprint 3? |
-|----------|--------|-------------|:-:|
-| `/api/cart/add` | POST | Add item to cart | |
-| `/api/cart/:user_id` | GET | View cart items | |
-| `/api/cart/:user_id/item/:menu_item_id` | PUT | Update cart item quantity | ✅ |
-| `/api/cart/:user_id/item/:menu_item_id` | DELETE | Remove item from cart | |
-| `/api/cart/:user_id/clear` | DELETE | Clear entire cart | |
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/cart/add` | POST | Add item to cart |
+| `/api/cart/:user_id` | GET | View cart items |
+| `/api/cart/:user_id/item/:menu_item_id` | PUT | Update cart item quantity |
+| `/api/cart/:user_id/item/:menu_item_id` | DELETE | Remove item from cart |
+| `/api/cart/:user_id/clear` | DELETE | Clear entire cart |
 
 **Total: 17 API endpoints (5 new in Sprint 3)**
 
@@ -309,19 +309,19 @@ func TestUpdateCartItemQuantity(t *testing.T) {
 ### Frontend Jest Unit Tests
 Tested using React Testing Library and Jest.
 
-| Test File | Components Tested | Status | New in Sprint 3? |
-|-----------|-------------------|--------|:-:|
-| `SignIn.test.js` | Sign In form rendering, credential submission, password toggle, Forgot Password link | ✅ Passed | Updated |
-| `SignUp.test.js` | Form validation (email, phone, password rules), strength meter, API submit, error handling | ✅ Passed | ✅ New |
-| `Cart.test.js` | Backend API integration (mock fetch), loading/error states, quantity controls, remove/clear, localStorage fallback | ✅ Passed | Updated |
-| `OrderSummary.test.js` | Renders items from API, subtotal/tax/total calculation, Place Order button, loading state, confirmation screen | ✅ Passed | ✅ New |
-| `ForgotPassword.test.js` | Form rendering, email validation, API submit, success/error messages, loading state | ✅ Passed | ✅ New |
-| `ResetPassword.test.js` | Token from URL, password validation, strength meter, API submit, countdown redirect | ✅ Passed | ✅ New |
-| `OrderHistory.test.js` | Order list rendering, empty state, loading state, expandable cards, status badges | ✅ Passed | ✅ New |
-| `Menu.test.js` | Menu item rendering, stall name display, Add to Cart, API integration | ✅ Passed | Updated |
-| `Navbar.test.js` | Brand rendering, cart badge, sign out, Order History link | ✅ Passed | Updated |
-| `Profile.test.js` | User info display, edit mode, save via API, validation | ✅ Passed | Updated |
-| `Toast.test.js` | Toast rendering for success/error/info/warning types, auto-dismiss, close button | ✅ Passed | ✅ New |
+| Test File | Components Tested | Status |
+|-----------|-------------------|--------|
+| `SignIn.test.js` | Sign In form rendering, credential submission, password toggle, Forgot Password link | ✅ Passed |
+| `SignUp.test.js` | Form validation (email, phone, password rules), strength meter, API submit, error handling | ✅ Passed |
+| `Cart.test.js` | Backend API integration (mock fetch), loading/error states, quantity controls, remove/clear, localStorage fallback | ✅ Passed |
+| `OrderSummary.test.js` | Renders items from API, subtotal/tax/total calculation, Place Order button, loading state, confirmation screen | ✅ Passed |
+| `ForgotPassword.test.js` | Form rendering, email validation, API submit, success/error messages, loading state | ✅ Passed |
+| `ResetPassword.test.js` | Token from URL, password validation, strength meter, API submit, countdown redirect | ✅ Passed |
+| `OrderHistory.test.js` | Order list rendering, empty state, loading state, expandable cards, status badges | ✅ Passed |
+| `Menu.test.js` | Menu item rendering, stall name display, Add to Cart, API integration | ✅ Passed |
+| `Navbar.test.js` | Brand rendering, cart badge, sign out, Order History link | ✅ Passed |
+| `Profile.test.js` | User info display, edit mode, save via API, validation | ✅ Passed |
+| `Toast.test.js` | Toast rendering for success/error/info/warning types, auto-dismiss, close button | ✅ Passed |
 
 **Frontend test summary: 11 Jest test files (6 new + 5 updated in Sprint 3), all passing.**
 
