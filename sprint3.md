@@ -177,7 +177,7 @@ In Sprint 3, our team aimed to:
 | `/api/cart/:user_id/item/:menu_item_id` | DELETE | Remove item from cart |
 | `/api/cart/:user_id/clear` | DELETE | Clear entire cart |
 
-**Total: 17 API endpoints (5 new in Sprint 3)**
+**Total: 17 API endpoints **
 
 ---
 
@@ -220,7 +220,7 @@ Tested using Go's `testing` and `httptest` packages with in-memory SQLite databa
 | `TestEmptyCart` | `cart_api_test.go` | ✅ Passed | Adds item then clears cart, verifies empty |
 | `TestUpdateCartItemQuantity` | `cart_api_test.go` | ✅ Passed | Adds item (qty 2), updates to qty 5, verifies |
 
-**Backend test summary: 17 tests across 5 files (6 new in Sprint 3), all passing.**
+**Backend test summary: 17 tests across 5 files , all passing.**
 
 ---
 
@@ -323,7 +323,7 @@ Tested using React Testing Library and Jest.
 | `Profile.test.js` | User info display, edit mode, save via API, validation | ✅ Passed |
 | `Toast.test.js` | Toast rendering for success/error/info/warning types, auto-dismiss, close button | ✅ Passed |
 
-**Frontend test summary: 11 Jest test files (6 new + 5 updated in Sprint 3), all passing.**
+**Frontend test summary: 11 Jest test files, all passing.**
 
 ---
 
