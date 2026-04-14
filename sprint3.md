@@ -1,8 +1,8 @@
 # Sprint 3 – GatorDash
 
 ## Visual Demo Links
-- Frontend Demo Video: *(add link)*
-- Backend Demo Video: *(add link)*
+- Frontend Demo Video: https://drive.google.com/file/d/1paI2LNxMfgK8trF1a5vXRYk3TUXcMrWN/view
+- Backend Demo Video: https://drive.google.com/file/d/1DKVRq48gxD3eGmXcj-0L9SvWUWfPitmZ/view
 - GitHub Repository: https://github.com/trineshreddy/GatorDash
 
 ---
@@ -386,69 +386,6 @@ test('submits email and shows success message', async () => {
 | `login.cy.js` | Login with valid/invalid credentials, verifies toast messages | ✅ Passed |
 | `menu.cy.js` | Browse food stall, view menu items, add to cart | ✅ Passed |
 | `cart.cy.js` | Add items to cart, update quantities, remove items, proceed to checkout | ✅ Passed |
-
----
-
-## Challenges Faced & Solutions
-
-| Challenge | Solution |
-|-----------|----------|
-| Cart was 100% localStorage, backend APIs unused | Implemented hybrid approach: API calls with localStorage as fallback + `cartUpdated` window events for real-time Navbar sync |
-| Password reset required email delivery (not feasible locally) | Backend returns reset token directly in API response for development; production would integrate SMTP |
-| Test isolation — backend tests interfered with each other | Created per-test in-memory SQLite databases with unique DSNs derived from `t.Name()` |
-| Order History API not built yet | OrderHistory component uses realistic mock data with graceful API fallback |
-| Menu data hardcoded in `data.js` | Migrated to API fetch with hardcoded fallback for offline development |
-| Different team members editing shared files | Strict file ownership: each dev only edits their assigned files, coordinated API contracts via shared documentation |
-| Cart quantity update had no backend route | Trinesh added `PUT /api/cart/:user_id/item/:menu_item_id` with proper validation and `ErrCartItemNotFound` sentinel error |
-
----
-
-## Sprint 3 vs Sprint 2 Progress
-
-| Metric | Sprint 2 | Sprint 3 | Change |
-|--------|----------|----------|--------|
-| Backend API endpoints | 12 | 17 | +5 |
-| Backend unit tests | 11 | 17 | +6 |
-| Frontend pages/components | 10 | 13 | +3 new pages |
-| Frontend Jest test files | 5 | 11 | +6 (more than doubled) |
-| Frontend Cypress test files | 4 | 4 | maintained |
-| Backend test files | 3 | 5 | +2 |
-| Cart integration | localStorage only | Full API + localStorage fallback | ✅ |
-| Menu/FoodStalls data | Hardcoded `data.js` | Backend API | ✅ |
-| Profile persistence | localStorage only | Backend API | ✅ |
-| Password recovery | ❌ Not available | ✅ Full flow | ✅ |
-| Order History | ❌ Not available | ✅ New page | ✅ |
-| Order confirmation | ❌ Basic clear | ✅ Confirmation # + pickup ETA | ✅ |
-
----
-
-## GatorDash vs Reference Project (UFShopEase) — Sprint 3 Comparison
-
-| Feature | UFShopEase (Sprint 3) | GatorDash (Sprint 3) |
-|---------|----------------------|----------------------|
-| Cart ↔ Backend | ✅ | ✅ |
-| Menu quantity selectors | ✅ | ✅ |
-| Logout functionality | ✅ | ✅ |
-| Cart count in navbar | ✅ | ✅ |
-| Forgot/Reset Password (full-stack) | Backend only (no UI) | ✅ **Full UI + Backend API** |
-| Order History page | ❌ | ✅ **New page** |
-| Menu search by name | ❌ | ✅ **New API** |
-| FoodStalls from backend API | ❌ (hardcoded) | ✅ |
-| Profile ↔ Backend | ❌ | ✅ |
-| Order confirmation number + ETA | ❌ | ✅ |
-| Loading/Error/Empty states | ❌ | ✅ All pages |
-| Password strength meter on reset | ❌ | ✅ |
-| In-memory test isolation (backend) | ❌ (live DB) | ✅ SQLite-based |
-| Backend unit tests | 16 tests / 4 files | **17 tests / 5 files** |
-| Frontend Jest test files | Not specified | **11 files** |
-| Cypress E2E test files | Not specified | **4 files** |
-
----
-
-## Links & Resources
-- [Backend API Testing Guide](API_TESTING_GUIDE.md)
-- [GitHub Repository](https://github.com/trineshreddy/GatorDash)
-- [User Stories / Issues](https://github.com/trineshreddy/GatorDash/issues)
 
 ---
 
