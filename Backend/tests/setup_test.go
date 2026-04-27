@@ -38,7 +38,7 @@ func setupTestRouter(t *testing.T) (*gin.Engine, *gorm.DB) {
 	}
 
 	database.DB = db
-	if err := db.AutoMigrate(&models.User{}, &models.FoodStall{}, &models.MenuItem{}, &models.CartItem{}, &models.PasswordReset{}); err != nil {
+	if err := db.AutoMigrate(&models.User{}, &models.FoodStall{}, &models.MenuItem{}, &models.CartItem{}, &models.PasswordReset{}, &models.Order{}, &models.OrderItem{}); err != nil {
 		t.Fatalf("failed to migrate test DB: %v", err)
 	}
 

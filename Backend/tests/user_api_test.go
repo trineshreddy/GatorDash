@@ -151,19 +151,44 @@ func TestEditUser(t *testing.T) {
 	email := "edit@example.com"
 	userID := signupUserAndGetID(t, router, email)
 
-	update := performRequest(router, http.MethodPut, "/api/user/"+userID, map[string]interface{}{
-		"name":  "Jane Doe",
-		"phone": "9876543210",
+	// Sign in to get JWT token
+	signin := performRequest(router, http.MethodPost, "/api/signin", map[string]interface{}{
+		"email":    email,
+		"password": "password123",
 	})
-	if update.Code != http.StatusOK {
-		t.Fatalf("update user expected 200, got %d", update.Code)
+	if signin.Code != http.StatusOK {
+		t.Fatalf("signin expected 200, got %d", signin.Code)
 	}
 
-	updated := performRequest(router, http.MethodGet, "/api/user/"+userID, nil)
-	if updated.Code != http.StatusOK {
-		t.Fatalf("get after update expected 200, got %d", updated.Code)
+	signinResp := parseResponse(t, signin)
+	var signinData map[string]interface{}
+	if err := json.Unmarshal(signinResp.Data, &signinData); err != nil {
+		t.Fatalf("failed to parse signin response: %v", err)
 	}
-	updatedResp := parseResponse(t, updated)
+	token := signinData["token"].(string)
+
+	// Update user with JWT token
+	updateReq, _ := http.NewRequest(http.MethodPut, "/api/user/"+userID, createJSONBody(map[string]interface{}{
+		"name":  "Jane Doe",
+		"phone": "9876543210",
+	}))
+	updateReq.Header.Set("Authorization", "Bearer "+token)
+	updateReq.Header.Set("Content-Type", "application/json")
+	updateW := httptest.NewRecorder()
+	router.ServeHTTP(updateW, updateReq)
+	if updateW.Code != http.StatusOK {
+		t.Fatalf("update user expected 200, got %d", updateW.Code)
+	}
+
+	// Get updated user with JWT token
+	getReq, _ := http.NewRequest(http.MethodGet, "/api/user/"+userID, nil)
+	getReq.Header.Set("Authorization", "Bearer "+token)
+	getW := httptest.NewRecorder()
+	router.ServeHTTP(getW, getReq)
+	if getW.Code != http.StatusOK {
+		t.Fatalf("get after update expected 200, got %d", getW.Code)
+	}
+	updatedResp := parseResponse(t, getW)
 	if !updatedResp.Success {
 		t.Fatalf("expected success=true")
 	}
@@ -186,15 +211,38 @@ func TestDeleteUser(t *testing.T) {
 	email := "delete@example.com"
 	userID := signupUserAndGetID(t, router, email)
 
-	del := performRequest(router, http.MethodDelete, "/api/user/"+userID, nil)
-	if del.Code != http.StatusOK {
-		t.Fatalf("delete user expected 200, got %d", del.Code)
+	// Sign in to get JWT token
+	signin := performRequest(router, http.MethodPost, "/api/signin", map[string]interface{}{
+		"email":    email,
+		"password": "password123",
+	})
+	if signin.Code != http.StatusOK {
+		t.Fatalf("signin expected 200, got %d", signin.Code)
 	}
 
-	// Confirm deleted
-	get := performRequest(router, http.MethodGet, "/api/user/"+userID, nil)
-	if get.Code != http.StatusNotFound {
-		t.Fatalf("expected 404 after delete, got %d", get.Code)
+	signinResp := parseResponse(t, signin)
+	var signinData map[string]interface{}
+	if err := json.Unmarshal(signinResp.Data, &signinData); err != nil {
+		t.Fatalf("failed to parse signin response: %v", err)
+	}
+	token := signinData["token"].(string)
+
+	// Delete user with JWT token
+	delReq, _ := http.NewRequest(http.MethodDelete, "/api/user/"+userID, nil)
+	delReq.Header.Set("Authorization", "Bearer "+token)
+	delW := httptest.NewRecorder()
+	router.ServeHTTP(delW, delReq)
+	if delW.Code != http.StatusOK {
+		t.Fatalf("delete user expected 200, got %d", delW.Code)
+	}
+
+	// Confirm deleted - since user is deleted but token is still valid, we get 404
+	getReq, _ := http.NewRequest(http.MethodGet, "/api/user/"+userID, nil)
+	getReq.Header.Set("Authorization", "Bearer "+token)
+	getW := httptest.NewRecorder()
+	router.ServeHTTP(getW, getReq)
+	if getW.Code != http.StatusNotFound {
+		t.Fatalf("expected 404 after delete (user not found), got %d", getW.Code)
 	}
 }
 

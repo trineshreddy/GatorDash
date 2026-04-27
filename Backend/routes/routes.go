@@ -42,6 +42,9 @@ func SetupRoutes(userHandler *handlers.UserHandler, foodHandler *handlers.FoodHa
 			protected.PUT("/cart/:user_id/item/:menu_item_id", foodHandler.UpdateCartItemQuantity)
 			protected.DELETE("/cart/:user_id/item/:menu_item_id", foodHandler.RemoveCartItem)
 			protected.DELETE("/cart/:user_id/clear", foodHandler.ClearCart)
+
+			// Order operations
+			protected.POST("/order/place", foodHandler.PlaceOrder)
 		}
 	}
 

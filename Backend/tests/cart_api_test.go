@@ -189,26 +189,54 @@ func TestDeleteItemFromCart(t *testing.T) {
 	}
 	userID := signupData["id"].(string)
 
-	// Add one item, then delete it
-	add := performRequest(router, http.MethodPost, "/api/cart/add", map[string]interface{}{
+	// Sign in to get JWT token
+	signin := performRequest(router, http.MethodPost, "/api/signin", map[string]interface{}{
+		"email":    "deletesp@example.com",
+		"password": "password123",
+	})
+	if signin.Code != http.StatusOK {
+		t.Fatalf("signin expected 200, got %d", signin.Code)
+	}
+
+	signinResp := parseResponse(t, signin)
+	var signinData map[string]interface{}
+	if err := json.Unmarshal(signinResp.Data, &signinData); err != nil {
+		t.Fatalf("failed to parse signin response: %v", err)
+	}
+	token := signinData["token"].(string)
+
+	// Add one item with JWT
+	addReq, _ := http.NewRequest(http.MethodPost, "/api/cart/add", createJSONBody(map[string]interface{}{
 		"user_id":      userID,
 		"menu_item_id": "menu_1",
 		"quantity":     1,
-	})
-	if add.Code != http.StatusOK {
-		t.Fatalf("add to cart expected 200, got %d", add.Code)
+	}))
+	addReq.Header.Set("Authorization", "Bearer "+token)
+	addReq.Header.Set("Content-Type", "application/json")
+	addW := httptest.NewRecorder()
+	router.ServeHTTP(addW, addReq)
+	if addW.Code != http.StatusOK {
+		t.Fatalf("add to cart expected 200, got %d", addW.Code)
 	}
 
-	remove := performRequest(router, http.MethodDelete, "/api/cart/"+userID+"/item/menu_1", nil)
-	if remove.Code != http.StatusOK {
-		t.Fatalf("remove cart item expected 200, got %d", remove.Code)
+	// Delete item with JWT
+	removeReq, _ := http.NewRequest(http.MethodDelete, "/api/cart/"+userID+"/item/menu_1", nil)
+	removeReq.Header.Set("Authorization", "Bearer "+token)
+	removeW := httptest.NewRecorder()
+	router.ServeHTTP(removeW, removeReq)
+	if removeW.Code != http.StatusOK {
+		t.Fatalf("remove cart item expected 200, got %d", removeW.Code)
 	}
 
-	view := performRequest(router, http.MethodGet, "/api/cart/"+userID, nil)
-	if view.Code != http.StatusOK {
-		t.Fatalf("view cart expected 200, got %d", view.Code)
+	// View cart with JWT
+	viewReq, _ := http.NewRequest(http.MethodGet, "/api/cart/"+userID, nil)
+	viewReq.Header.Set("Authorization", "Bearer "+token)
+	viewW := httptest.NewRecorder()
+	router.ServeHTTP(viewW, viewReq)
+	if viewW.Code != http.StatusOK {
+		t.Fatalf("view cart expected 200, got %d", viewW.Code)
 	}
-	viewResp := parseResponse(t, view)
+	viewResp := parseResponse(t, viewW)
 	var cartItems []map[string]interface{}
 	if err := json.Unmarshal(viewResp.Data, &cartItems); err != nil {
 		t.Fatalf("failed to parse cart items: %v", err)
@@ -239,26 +267,54 @@ func TestEmptyCart(t *testing.T) {
 	}
 	userID := signupData["id"].(string)
 
-	// Add items, then clear
-	add := performRequest(router, http.MethodPost, "/api/cart/add", map[string]interface{}{
+	// Sign in to get JWT token
+	signin := performRequest(router, http.MethodPost, "/api/signin", map[string]interface{}{
+		"email":    "emptycart@example.com",
+		"password": "password123",
+	})
+	if signin.Code != http.StatusOK {
+		t.Fatalf("signin expected 200, got %d", signin.Code)
+	}
+
+	signinResp := parseResponse(t, signin)
+	var signinData map[string]interface{}
+	if err := json.Unmarshal(signinResp.Data, &signinData); err != nil {
+		t.Fatalf("failed to parse signin response: %v", err)
+	}
+	token := signinData["token"].(string)
+
+	// Add items with JWT
+	addReq, _ := http.NewRequest(http.MethodPost, "/api/cart/add", createJSONBody(map[string]interface{}{
 		"user_id":      userID,
 		"menu_item_id": "menu_1",
 		"quantity":     2,
-	})
-	if add.Code != http.StatusOK {
-		t.Fatalf("add to cart expected 200, got %d", add.Code)
+	}))
+	addReq.Header.Set("Authorization", "Bearer "+token)
+	addReq.Header.Set("Content-Type", "application/json")
+	addW := httptest.NewRecorder()
+	router.ServeHTTP(addW, addReq)
+	if addW.Code != http.StatusOK {
+		t.Fatalf("add to cart expected 200, got %d", addW.Code)
 	}
 
-	clear := performRequest(router, http.MethodDelete, "/api/cart/"+userID+"/clear", nil)
-	if clear.Code != http.StatusOK {
-		t.Fatalf("clear cart expected 200, got %d", clear.Code)
+	// Clear cart with JWT
+	clearReq, _ := http.NewRequest(http.MethodDelete, "/api/cart/"+userID+"/clear", nil)
+	clearReq.Header.Set("Authorization", "Bearer "+token)
+	clearW := httptest.NewRecorder()
+	router.ServeHTTP(clearW, clearReq)
+	if clearW.Code != http.StatusOK {
+		t.Fatalf("clear cart expected 200, got %d", clearW.Code)
 	}
 
-	view := performRequest(router, http.MethodGet, "/api/cart/"+userID, nil)
-	if view.Code != http.StatusOK {
-		t.Fatalf("view after clear expected 200, got %d", view.Code)
+	// View cart with JWT
+	viewReq, _ := http.NewRequest(http.MethodGet, "/api/cart/"+userID, nil)
+	viewReq.Header.Set("Authorization", "Bearer "+token)
+	viewW := httptest.NewRecorder()
+	router.ServeHTTP(viewW, viewReq)
+	if viewW.Code != http.StatusOK {
+		t.Fatalf("view after clear expected 200, got %d", viewW.Code)
 	}
-	viewResp := parseResponse(t, view)
+	viewResp := parseResponse(t, viewW)
 	var cartItems []map[string]interface{}
 	if err := json.Unmarshal(viewResp.Data, &cartItems); err != nil {
 		t.Fatalf("failed to parse cart items: %v", err)
@@ -298,15 +354,40 @@ func TestUpdateCartItemQuantity(t *testing.T) {
 		t.Fatalf("add to cart expected 200, got %d", add.Code)
 	}
 
-	put := performRequest(router, http.MethodPut, "/api/cart/"+userID+"/item/menu_1", map[string]interface{}{
-		"quantity": 5,
+	// Sign in to get JWT token
+	signin := performRequest(router, http.MethodPost, "/api/signin", map[string]interface{}{
+		"email":    "qtycart@example.com",
+		"password": "password123",
 	})
-	if put.Code != http.StatusOK {
-		t.Fatalf("update cart quantity expected 200, got %d", put.Code)
+	if signin.Code != http.StatusOK {
+		t.Fatalf("signin expected 200, got %d", signin.Code)
 	}
 
-	view := performRequest(router, http.MethodGet, "/api/cart/"+userID, nil)
-	viewResp := parseResponse(t, view)
+	signinResp := parseResponse(t, signin)
+	var signinData map[string]interface{}
+	if err := json.Unmarshal(signinResp.Data, &signinData); err != nil {
+		t.Fatalf("failed to parse signin response: %v", err)
+	}
+	token := signinData["token"].(string)
+
+	// Update quantity with JWT
+	putReq, _ := http.NewRequest(http.MethodPut, "/api/cart/"+userID+"/item/menu_1", createJSONBody(map[string]interface{}{
+		"quantity": 5,
+	}))
+	putReq.Header.Set("Authorization", "Bearer "+token)
+	putReq.Header.Set("Content-Type", "application/json")
+	putW := httptest.NewRecorder()
+	router.ServeHTTP(putW, putReq)
+	if putW.Code != http.StatusOK {
+		t.Fatalf("update cart quantity expected 200, got %d", putW.Code)
+	}
+
+	// View cart with JWT
+	viewReq, _ := http.NewRequest(http.MethodGet, "/api/cart/"+userID, nil)
+	viewReq.Header.Set("Authorization", "Bearer "+token)
+	viewW := httptest.NewRecorder()
+	router.ServeHTTP(viewW, viewReq)
+	viewResp := parseResponse(t, viewW)
 	var cartItems []map[string]interface{}
 	if err := json.Unmarshal(viewResp.Data, &cartItems); err != nil {
 		t.Fatalf("failed to parse cart items: %v", err)
