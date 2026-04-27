@@ -45,6 +45,7 @@ func SetupRoutes(userHandler *handlers.UserHandler, foodHandler *handlers.FoodHa
 
 			// Order operations
 			protected.POST("/order/place", foodHandler.PlaceOrder)
+			protected.GET("/orders/:user_id", foodHandler.GetOrderHistory)
 		}
 	}
 

@@ -217,3 +217,12 @@ func (s *FoodStore) CreateOrder(order *models.Order, orderItems []models.OrderIt
 
 	return nil
 }
+
+// GetOrdersByUserID fetches a user's past orders, including items.
+func (s *FoodStore) GetOrdersByUserID(userID string) ([]models.Order, error) {
+	var orders []models.Order
+	if err := s.db.Preload("Items").Where("user_id = ?", userID).Order("created_at DESC").Find(&orders).Error; err != nil {
+		return nil, fmt.Errorf("failed to fetch orders: %w", err)
+	}
+	return orders, nil
+}

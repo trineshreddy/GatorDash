@@ -134,3 +134,93 @@ func TestPlaceOrder(t *testing.T) {
 		t.Fatalf("expected empty cart after order, got %d items", len(cartItems))
 	}
 }
+
+func TestGetOrderHistory(t *testing.T) {
+	router, db := setupTestRouter(t)
+	seedFoodData(t, db)
+
+	signup := performRequest(router, http.MethodPost, "/api/signup", map[string]interface{}{
+		"name":     "History User",
+		"email":    "history@example.com",
+		"phone":    "9999999998",
+		"password": "password123",
+	})
+	if signup.Code != http.StatusOK {
+		t.Fatalf("signup expected 200, got %d", signup.Code)
+	}
+
+	signupResp := parseResponse(t, signup)
+	var signupData map[string]interface{}
+	if err := json.Unmarshal(signupResp.Data, &signupData); err != nil {
+		t.Fatalf("failed to parse signup response: %v", err)
+	}
+	userID := signupData["id"].(string)
+
+	signin := performRequest(router, http.MethodPost, "/api/signin", map[string]interface{}{
+		"email":    "history@example.com",
+		"password": "password123",
+	})
+	if signin.Code != http.StatusOK {
+		t.Fatalf("signin expected 200, got %d", signin.Code)
+	}
+
+	signinResp := parseResponse(t, signin)
+	var signinData map[string]interface{}
+	if err := json.Unmarshal(signinResp.Data, &signinData); err != nil {
+		t.Fatalf("failed to parse signin response: %v", err)
+	}
+	token := signinData["token"].(string)
+
+	addReq, _ := http.NewRequest(http.MethodPost, "/api/cart/add", createJSONBody(map[string]interface{}{
+		"user_id":      userID,
+		"menu_item_id": "menu_1",
+		"quantity":     2,
+	}))
+	addReq.Header.Set("Authorization", "Bearer "+token)
+	addReq.Header.Set("Content-Type", "application/json")
+	addW := httptest.NewRecorder()
+	router.ServeHTTP(addW, addReq)
+	if addW.Code != http.StatusOK {
+		t.Fatalf("add to cart expected 200, got %d", addW.Code)
+	}
+
+	orderReq, _ := http.NewRequest(http.MethodPost, "/api/order/place", createJSONBody(map[string]interface{}{
+		"user_id": userID,
+		"items": []map[string]interface{}{
+			{
+				"menu_item_id": "menu_1",
+				"quantity":     2,
+				"price":        8.99,
+			},
+		},
+		"total": 17.98,
+	}))
+	orderReq.Header.Set("Authorization", "Bearer "+token)
+	orderReq.Header.Set("Content-Type", "application/json")
+	orderW := httptest.NewRecorder()
+	router.ServeHTTP(orderW, orderReq)
+	if orderW.Code != http.StatusOK {
+		t.Fatalf("place order expected 200, got %d", orderW.Code)
+	}
+
+	historyReq, _ := http.NewRequest(http.MethodGet, "/api/orders/"+userID, nil)
+	historyReq.Header.Set("Authorization", "Bearer "+token)
+	historyW := httptest.NewRecorder()
+	router.ServeHTTP(historyW, historyReq)
+	if historyW.Code != http.StatusOK {
+		t.Fatalf("order history expected 200, got %d", historyW.Code)
+	}
+
+	historyResp := parseResponse(t, historyW)
+	var orders []map[string]interface{}
+	if err := json.Unmarshal(historyResp.Data, &orders); err != nil {
+		t.Fatalf("failed to parse order history response: %v", err)
+	}
+	if len(orders) != 1 {
+		t.Fatalf("expected 1 order in history, got %d", len(orders))
+	}
+	items, ok := orders[0]["items"].([]interface{})
+	if !ok || len(items) != 1 {
+		t.Fatalf("expected order history item count 1, got %v", orders[0]["items"])
+	}
+}

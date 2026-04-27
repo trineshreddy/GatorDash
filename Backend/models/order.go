@@ -13,6 +13,7 @@ type Order struct {
 	TotalAmount     float64   `json:"total_amount" gorm:"not null"`
 	TaxAmount       float64   `json:"tax_amount" gorm:"not null"`
 	DeliveryTime    *time.Time `json:"delivery_time,omitempty"`
+	Items           []OrderItem `json:"items,omitempty" gorm:"foreignKey:OrderID;constraint:OnDelete:CASCADE"`
 	CreatedAt       time.Time `json:"created_at"`
 	UpdatedAt       time.Time `json:"updated_at"`
 }
@@ -56,4 +57,23 @@ type OrderResponse struct {
 	TotalAmount  float64   `json:"total_amount"`
 	EstimatedTime string   `json:"estimated_time"` // e.g., "15-20 minutes"
 	CreatedAt    time.Time `json:"created_at"`
+}
+
+type OrderHistoryItem struct {
+	MenuItemID  string  `json:"menu_item_id"`
+	Name        string  `json:"name"`
+	Description string  `json:"description"`
+	Price       float64 `json:"price"`
+	Quantity    int     `json:"quantity"`
+}
+
+type OrderHistoryResponse struct {
+	OrderID      string             `json:"order_id"`
+	OrderNumber  string             `json:"order_number"`
+	Status       string             `json:"status"`
+	TotalAmount  float64            `json:"total_amount"`
+	TaxAmount    float64            `json:"tax_amount"`
+	EstimatedTime string            `json:"estimated_time"`
+	CreatedAt    time.Time          `json:"created_at"`
+	Items        []OrderHistoryItem `json:"items"`
 }

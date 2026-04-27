@@ -225,6 +225,59 @@ func (h *FoodHandler) ClearCart(c *gin.Context) {
 	utils.SendSuccess(c, "Cart cleared successfully", nil)
 }
 
+// GetOrderHistory returns a user's past orders with items.
+func (h *FoodHandler) GetOrderHistory(c *gin.Context) {
+	userID := c.Param("user_id")
+	if userID == "" {
+		utils.SendError(c, 400, "User ID is required")
+		return
+	}
+
+	currentUserID, _ := c.Get("user_id")
+	if currentUserID != userID {
+		utils.SendError(c, 403, "Forbidden")
+		return
+	}
+
+	if _, exists := h.userStore.GetUserByID(userID); !exists {
+		utils.SendError(c, 404, "User not found")
+		return
+	}
+
+	orders, err := h.foodStore.GetOrdersByUserID(userID)
+	if err != nil {
+		utils.SendError(c, 500, err.Error())
+		return
+	}
+
+	response := make([]models.OrderHistoryResponse, 0, len(orders))
+	for _, order := range orders {
+		items := make([]models.OrderHistoryItem, 0, len(order.Items))
+		for _, item := range order.Items {
+			items = append(items, models.OrderHistoryItem{
+				MenuItemID:  item.MenuItemID,
+				Name:        item.Name,
+				Description: item.Description,
+				Price:       item.Price,
+				Quantity:    item.Quantity,
+			})
+		}
+
+		response = append(response, models.OrderHistoryResponse{
+			OrderID:       order.ID,
+			OrderNumber:   order.OrderNumber,
+			Status:        order.Status,
+			TotalAmount:   order.TotalAmount,
+			TaxAmount:     order.TaxAmount,
+			EstimatedTime: "15-20 minutes",
+			CreatedAt:     order.CreatedAt,
+			Items:         items,
+		})
+	}
+
+	utils.SendSuccess(c, "Order history retrieved successfully", response)
+}
+
 // PlaceOrder creates a new order from the user's cart
 func (h *FoodHandler) PlaceOrder(c *gin.Context) {
 	var req models.OrderRequest
