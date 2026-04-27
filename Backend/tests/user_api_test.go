@@ -3,6 +3,7 @@ package tests
 import (
 	"encoding/json"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -79,6 +80,20 @@ func TestSignin(t *testing.T) {
 	if !resp.Success {
 		t.Fatalf("expected success=true")
 	}
+
+	// Check that response contains user and token
+	var data map[string]interface{}
+	if err := json.Unmarshal(resp.Data, &data); err != nil {
+		t.Fatalf("failed to parse response data: %v", err)
+	}
+
+	if _, exists := data["user"]; !exists {
+		t.Fatalf("expected user in response data")
+	}
+
+	if _, exists := data["token"]; !exists {
+		t.Fatalf("expected token in response data")
+	}
 }
 
 func TestFetchUser(t *testing.T) {
@@ -87,7 +102,32 @@ func TestFetchUser(t *testing.T) {
 	email := "fetch@example.com"
 	userID := signupUserAndGetID(t, router, email)
 
-	w := performRequest(router, http.MethodGet, "/api/user/"+userID, nil)
+	// Sign in to get JWT token
+	signinResp := performRequest(router, http.MethodPost, "/api/signin", map[string]interface{}{
+		"email":    email,
+		"password": "password123",
+	})
+	if signinResp.Code != http.StatusOK {
+		t.Fatalf("signin expected 200, got %d", signinResp.Code)
+	}
+
+	signinData := parseResponse(t, signinResp)
+	var signinResult map[string]interface{}
+	if err := json.Unmarshal(signinData.Data, &signinResult); err != nil {
+		t.Fatalf("failed to parse signin response: %v", err)
+	}
+
+	token, ok := signinResult["token"].(string)
+	if !ok {
+		t.Fatalf("expected token in signin response")
+	}
+
+	// Now fetch user with JWT token
+	req, _ := http.NewRequest(http.MethodGet, "/api/user/"+userID, nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
 	if w.Code != http.StatusOK {
 		t.Fatalf("get user expected 200, got %d", w.Code)
 	}
