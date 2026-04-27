@@ -7,6 +7,8 @@ type FoodStall struct {
 	ID          string    `gorm:"primaryKey" json:"id"`
 	Name        string    `gorm:"not null" json:"name"`
 	Description string    `json:"description"`
+	Color       string    `json:"color,omitempty"`
+	ImageURL    string    `json:"image_url,omitempty"`
 	IsActive    bool      `gorm:"default:true" json:"is_active"`
 	CreatedAt   time.Time `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt   time.Time `gorm:"autoUpdateTime" json:"updated_at"`
@@ -23,6 +25,7 @@ type MenuItem struct {
 	Name        string    `gorm:"not null" json:"name"`
 	Description string    `json:"description"`
 	Price       float64   `gorm:"not null" json:"price"`
+	ImageURL    string    `json:"image_url,omitempty"`
 	IsAvailable bool      `gorm:"default:true" json:"is_available"`
 	CreatedAt   time.Time `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt   time.Time `gorm:"autoUpdateTime" json:"updated_at"`

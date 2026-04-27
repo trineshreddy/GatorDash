@@ -81,13 +81,13 @@ func seedFoodData(t *testing.T, db *gorm.DB) {
 	t.Helper()
 
 	stalls := []models.FoodStall{
-		{ID: "stall_1", Name: "Gator Bites", Description: "Burgers and fries", IsActive: true},
-		{ID: "stall_2", Name: "Swamp Pizza", Description: "Pizza and sides", IsActive: true},
-		{ID: "stall_3", Name: "Dockside Wings", Description: "Wings and sauces", IsActive: true},
-		{ID: "stall_4", Name: "Garden Grill", Description: "Salads and bowls", IsActive: true},
-		{ID: "stall_5", Name: "Street Tacos", Description: "Tacos and burritos", IsActive: true},
-		{ID: "stall_6", Name: "Midnight Noodles", Description: "Noodles and rice", IsActive: true},
-		{ID: "stall_7", Name: "Sweet Treats", Description: "Desserts and snacks", IsActive: true},
+		{ID: "stall_1", Name: "Gator Bites", Description: "Burgers and fries", Color: "#0D7377", ImageURL: "https://images.unsplash.com/photo-1555992336-03a23c439da4?auto=format&fit=crop&w=600&q=80", IsActive: true},
+		{ID: "stall_2", Name: "Swamp Pizza", Description: "Pizza and sides", Color: "#FFA500", ImageURL: "https://images.unsplash.com/photo-1600891964599-f61ba0e24092?auto=format&fit=crop&w=600&q=80", IsActive: true},
+		{ID: "stall_3", Name: "Dockside Wings", Description: "Wings and sauces", Color: "#FF0000", ImageURL: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=600&q=80", IsActive: true},
+		{ID: "stall_4", Name: "Garden Grill", Description: "Salads and bowls", Color: "#5F8D4E", ImageURL: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80", IsActive: true},
+		{ID: "stall_5", Name: "Street Tacos", Description: "Tacos and burritos", Color: "#FEFFDE", ImageURL: "https://images.unsplash.com/photo-1552332386-f8dd00dc0e7b?auto=format&fit=crop&w=600&q=80", IsActive: true},
+		{ID: "stall_6", Name: "Midnight Noodles", Description: "Noodles and rice", Color: "#FFD4D4", ImageURL: "https://images.unsplash.com/photo-1553621042-f6e147245754?auto=format&fit=crop&w=600&q=80", IsActive: true},
+		{ID: "stall_7", Name: "Sweet Treats", Description: "Desserts and snacks", Color: "#C27BA0", ImageURL: "https://images.unsplash.com/photo-1542827630-8e21ebdf8a92?auto=format&fit=crop&w=600&q=80", IsActive: true},
 	}
 	if err := db.Create(&stalls).Error; err != nil {
 		t.Fatalf("failed to seed stalls: %v", err)
@@ -279,6 +279,7 @@ func seedFoodData(t *testing.T, db *gorm.DB) {
 				Name:        itemNames[i-1][j-1],
 				Description: itemDescriptions[i-1][j-1],
 				Price:       5.0 + float64(j)*0.75 + float64(i)*0.25,
+				ImageURL:    fmt.Sprintf("https://picsum.photos/seed/%s/300/220", menuID),
 				IsAvailable: true,
 			})
 		}

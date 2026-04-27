@@ -123,14 +123,16 @@ func seedInitialData() error {
 		id          string
 		name        string
 		description string
+		color       string
+		imageURL    string
 	}{
-		{id: "stall_1", name: "Gator Bites", description: "Burgers, fries, and quick bites"},
-		{id: "stall_2", name: "Swamp Pizza", description: "Fresh pizzas and garlic bread"},
-		{id: "stall_3", name: "Dockside Wings", description: "Wings, sauces, and sides"},
-		{id: "stall_4", name: "Garden Grill", description: "Salads, bowls, and vegetarian options"},
-		{id: "stall_5", name: "Street Tacos", description: "Tacos, burritos, and salsas"},
-		{id: "stall_6", name: "Midnight Noodles", description: "Stir-fry noodles and fried rice"},
-		{id: "stall_7", name: "Sweet Treats", description: "Desserts, shakes, and snacks"},
+		{id: "stall_1", name: "Gator Bites", description: "Burgers, fries, and quick bites", color: "#0D7377", imageURL: "https://images.unsplash.com/photo-1555992336-03a23c439da4?auto=format&fit=crop&w=600&q=80"},
+		{id: "stall_2", name: "Swamp Pizza", description: "Fresh pizzas and garlic bread", color: "#FFA500", imageURL: "https://images.unsplash.com/photo-1600891964599-f61ba0e24092?auto=format&fit=crop&w=600&q=80"},
+		{id: "stall_3", name: "Dockside Wings", description: "Wings, sauces, and sides", color: "#FF0000", imageURL: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=600&q=80"},
+		{id: "stall_4", name: "Garden Grill", description: "Salads, bowls, and vegetarian options", color: "#5F8D4E", imageURL: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80"},
+		{id: "stall_5", name: "Street Tacos", description: "Tacos, burritos, and salsas", color: "#FEFFDE", imageURL: "https://images.unsplash.com/photo-1552332386-f8dd00dc0e7b?auto=format&fit=crop&w=600&q=80"},
+		{id: "stall_6", name: "Midnight Noodles", description: "Stir-fry noodles and fried rice", color: "#FFD4D4", imageURL: "https://images.unsplash.com/photo-1553621042-f6e147245754?auto=format&fit=crop&w=600&q=80"},
+		{id: "stall_7", name: "Sweet Treats", description: "Desserts, shakes, and snacks", color: "#C27BA0", imageURL: "https://images.unsplash.com/photo-1542827630-8e21ebdf8a92?auto=format&fit=crop&w=600&q=80"},
 	}
 
 	// 1) Ensure all stalls exist.
@@ -172,6 +174,7 @@ func seedInitialData() error {
 				Name:        fmt.Sprintf("Item %d.%d", i, j),
 				Description: fmt.Sprintf("Specialty item from stall %d", i),
 				Price:       priceBase,
+				ImageURL:    fmt.Sprintf("https://picsum.photos/seed/%s/300/220", menuID),
 				IsAvailable: true,
 				CreatedAt:   now,
 				UpdatedAt:   now,
