@@ -7,10 +7,16 @@ function SignIn({ onSignIn }) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
+    const [loading, setLoading] = useState(false);
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        onSignIn(email, password);
+        setLoading(true);
+        try {
+            await onSignIn(email, password);
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -58,7 +64,9 @@ function SignIn({ onSignIn }) {
                     </div>
                 </div>
 
-                <button className="signin-btn" type="submit">Sign In</button>
+                <button className="signin-btn" type="submit" disabled={loading}>
+                    {loading ? 'Signing In...' : 'Sign In'}
+                </button>
 
                 <p className="forgot-password-link">
                     <Link to="/forgot-password">Forgot Password?</Link>

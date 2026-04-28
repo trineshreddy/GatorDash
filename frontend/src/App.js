@@ -15,11 +15,22 @@ import OrderHistory from './OrderHistory';
 import './App.css';
 
 const dummyUser = { email: 'user@example.com', password: 'Password123' };
+const AUTH_TOKEN_KEY = 'authToken';
+
+const hasStoredSession = () => {
+  return Boolean(localStorage.getItem(AUTH_TOKEN_KEY) || localStorage.getItem('user'));
+};
+
+const getSignInUser = (data) => {
+  return data?.user || data?.data?.user || data?.data || null;
+};
+
+const getSignInToken = (data) => {
+  return data?.token || data?.data?.token || '';
+};
 
 function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(() => {
-    return localStorage.getItem('user') !== null;
-  });
+  const [isLoggedIn, setIsLoggedIn] = useState(hasStoredSession);
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -46,7 +57,17 @@ function App() {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        localStorage.setItem('user', JSON.stringify(data.data));
+        const user = getSignInUser(data);
+        const token = getSignInToken(data);
+
+        if (token) {
+          localStorage.setItem(AUTH_TOKEN_KEY, token);
+        }
+
+        if (user) {
+          localStorage.setItem('user', JSON.stringify(user));
+        }
+
         setIsLoggedIn(true);
         showToast('Welcome to GatorDash!', 'success');
       } else {
@@ -55,6 +76,7 @@ function App() {
     } catch (err) {
       if (emailInput === dummyUser.email && passwordInput === dummyUser.password) {
         localStorage.setItem('user', JSON.stringify({ name: 'Test User', email: emailInput }));
+        localStorage.removeItem(AUTH_TOKEN_KEY);
         setIsLoggedIn(true);
         showToast('Welcome to GatorDash!', 'success');
       } else {
@@ -64,6 +86,7 @@ function App() {
   };
 
   const handleLogout = () => {
+    localStorage.removeItem(AUTH_TOKEN_KEY);
     localStorage.removeItem('user');
     localStorage.removeItem('cart');
     setIsLoggedIn(false);
