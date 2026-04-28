@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from './Navbar';
+import { getAuthHeaders } from './Navbar';
 import './OrderHistory.css';
 
-// Mock orders for demo when backend API is not available
 const MOCK_ORDERS = [
     {
         id: 1,
@@ -39,19 +39,17 @@ const MOCK_ORDERS = [
     },
 ];
 
-function OrderHistory({ onLogout }) {
+function OrderHistory({ onLogout, showToast }) {
     const navigate = useNavigate();
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [expandedOrder, setExpandedOrder] = useState(null);
+    const [reordering, setReordering] = useState(null);
 
     const getUser = () => {
-        try {
-            return JSON.parse(localStorage.getItem('user') || '{}');
-        } catch {
-            return {};
-        }
+        try { return JSON.parse(localStorage.getItem('user') || '{}'); }
+        catch { return {}; }
     };
 
     const fetchOrders = useCallback(async () => {
@@ -59,44 +57,118 @@ function OrderHistory({ onLogout }) {
         setError(null);
         const user = getUser();
 
-        if (!user.id) {
-            // No user — show mock data for demo
-            setOrders(MOCK_ORDERS);
-            setLoading(false);
-            return;
-        }
-
         try {
-            const response = await fetch(`/api/orders/${user.id}`);
-            if (!response.ok) throw new Error('Failed to fetch orders');
-            const data = await response.json();
+            // Try GET /api/orders first (JWT-protected route)
+            const res = await fetch('/api/orders', {
+                headers: getAuthHeaders(),
+            });
 
-            if (data.success && Array.isArray(data.data) && data.data.length > 0) {
-                setOrders(data.data);
-            } else {
-                // API returned empty — use mock data for demo
-                setOrders(MOCK_ORDERS);
+            if (res.status === 401) {
+                // Session expired — clear and redirect
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                navigate('/signin');
+                return;
             }
+
+            if (res.ok) {
+                const data = await res.json();
+                if (data.success && Array.isArray(data.data) && data.data.length > 0) {
+                    setOrders(data.data);
+                    setLoading(false);
+                    return;
+                }
+            }
+
+            // Fallback: try user-scoped endpoint
+            if (user.id) {
+                const res2 = await fetch(`/api/orders/${user.id}`, {
+                    headers: getAuthHeaders(),
+                });
+                if (res2.ok) {
+                    const data2 = await res2.json();
+                    if (data2.success && Array.isArray(data2.data) && data2.data.length > 0) {
+                        setOrders(data2.data);
+                        setLoading(false);
+                        return;
+                    }
+                }
+            }
+
+            // API worked but returned empty — show empty state (not mock)
+            setOrders([]);
         } catch (err) {
             console.warn('Orders API not available, using mock data:', err.message);
+            // Only use mock data when backend is completely unreachable
             setOrders(MOCK_ORDERS);
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [navigate]);
 
     useEffect(() => {
         fetchOrders();
     }, [fetchOrders]);
 
+    // Auto-refresh every 30 seconds for live status updates
+    useEffect(() => {
+        const interval = setInterval(fetchOrders, 30000);
+        return () => clearInterval(interval);
+    }, [fetchOrders]);
+
+    const handleReorder = async (order) => {
+        if (!order.items || order.items.length === 0) return;
+        setReordering(order.id);
+
+        const user = getUser();
+
+        try {
+            // Try backend reorder endpoint first
+            const res = await fetch(`/api/orders/${order.id}/reorder`, {
+                method: 'POST',
+                headers: getAuthHeaders(),
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                if (data.success) {
+                    window.dispatchEvent(new Event('cartUpdated'));
+                    if (showToast) showToast('Items added to cart!', 'success');
+                    navigate('/cart');
+                    return;
+                }
+            }
+        } catch (err) {
+            // Fall through to local cart
+        }
+
+        // Fallback: add items to localStorage cart manually
+        const existing = JSON.parse(localStorage.getItem('cart') || '[]');
+        order.items.forEach((item) => {
+            const found = existing.find(c => c.name === item.name);
+            if (found) {
+                found.quantity = (found.quantity || 1) + item.quantity;
+            } else {
+                existing.push({
+                    id: `reorder_${Date.now()}_${item.name}`,
+                    name: item.name,
+                    price: item.price,
+                    quantity: item.quantity,
+                });
+            }
+        });
+        localStorage.setItem('cart', JSON.stringify(existing));
+        window.dispatchEvent(new Event('cartUpdated'));
+        if (showToast) showToast('Items added to cart!', 'success');
+        navigate('/cart');
+        setReordering(null);
+    };
+
     const formatDate = (dateStr) => {
         const date = new Date(dateStr);
         return date.toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric',
-            hour: 'numeric',
-            minute: '2-digit',
+            month: 'short', day: 'numeric', year: 'numeric',
+            hour: 'numeric', minute: '2-digit',
         });
     };
 
@@ -105,8 +177,9 @@ function OrderHistory({ onLogout }) {
             case 'delivered': return 'status-delivered';
             case 'preparing': return 'status-preparing';
             case 'cancelled': return 'status-cancelled';
-            case 'ready': return 'status-ready';
-            default: return 'status-pending';
+            case 'ready':     return 'status-ready';
+            case 'placed':    return 'status-placed';
+            default:          return 'status-pending';
         }
     };
 
@@ -114,7 +187,6 @@ function OrderHistory({ onLogout }) {
         setExpandedOrder(expandedOrder === orderId ? null : orderId);
     };
 
-    // Loading state
     if (loading) {
         return (
             <div className="history-page">
@@ -129,7 +201,6 @@ function OrderHistory({ onLogout }) {
         );
     }
 
-    // Error state
     if (error) {
         return (
             <div className="history-page">
@@ -161,7 +232,9 @@ function OrderHistory({ onLogout }) {
                     <div className="history-empty">
                         <div className="empty-icon">📋</div>
                         <p className="empty-title">No orders yet</p>
-                        <p className="empty-sub">Your order history will appear here once you place an order.</p>
+                        <p className="empty-sub">
+                            Your order history will appear here once you place an order.
+                        </p>
                         <button className="browse-btn" onClick={() => navigate('/foodstalls')}>
                             Browse Restaurants
                         </button>
@@ -173,18 +246,25 @@ function OrderHistory({ onLogout }) {
                                 className={`order-card ${expandedOrder === order.id ? 'expanded' : ''}`}
                                 key={order.id}
                             >
-                                <div className="order-card-header" onClick={() => toggleExpand(order.id)}>
+                                <div
+                                    className="order-card-header"
+                                    onClick={() => toggleExpand(order.id)}
+                                >
                                     <div className="order-card-left">
                                         <span className="order-num">
                                             {order.order_number || `#${order.id}`}
                                         </span>
-                                        <span className="order-date">{formatDate(order.created_at)}</span>
+                                        <span className="order-date">
+                                            {formatDate(order.created_at)}
+                                        </span>
                                     </div>
                                     <div className="order-card-right">
                                         <span className={`order-status ${getStatusClass(order.status)}`}>
                                             {order.status}
                                         </span>
-                                        <span className="order-total">${(order.total || 0).toFixed(2)}</span>
+                                        <span className="order-total">
+                                            ${(order.total || 0).toFixed(2)}
+                                        </span>
                                         <span className="expand-icon">
                                             {expandedOrder === order.id ? '▲' : '▼'}
                                         </span>
@@ -204,12 +284,19 @@ function OrderHistory({ onLogout }) {
                                                 </div>
                                             ))}
                                         </div>
-                                        {order.status === 'Delivered' && (
+
+                                        {/* Order Again — shown for Delivered, Placed, Ready */}
+                                        {['delivered', 'placed', 'ready'].includes(
+                                            order.status?.toLowerCase()
+                                        ) && (
                                             <button
                                                 className="reorder-btn"
-                                                onClick={() => navigate('/foodstalls')}
+                                                onClick={() => handleReorder(order)}
+                                                disabled={reordering === order.id}
                                             >
-                                                Order Again
+                                                {reordering === order.id
+                                                    ? 'Adding to cart...'
+                                                    : '🔁 Order Again'}
                                             </button>
                                         )}
                                     </div>
