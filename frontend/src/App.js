@@ -12,6 +12,7 @@ import Profile from './Profile';
 import ForgotPassword from './ForgotPassword';
 import ResetPassword from './ResetPassword';
 import OrderHistory from './OrderHistory';
+import Payment from './Payment';
 import './App.css';
 
 const dummyUser = { email: 'user@example.com', password: 'Password123' };
@@ -157,6 +158,14 @@ function App() {
           element={
             isLoggedIn
               ? <div className="page-transition"><OrderSummary onLogout={handleLogout} showToast={showToast} /></div>
+              : <Navigate to="/signin" />
+          }
+        />
+        <Route
+          path="/payment"
+          element={
+            isLoggedIn
+              ? <div className="page-transition"><Payment onLogout={handleLogout} showToast={showToast} /></div>
               : <Navigate to="/signin" />
           }
         />
