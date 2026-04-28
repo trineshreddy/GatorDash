@@ -33,6 +33,13 @@ describe('OrderSummary Component', () => {
         jest.restoreAllMocks();
     });
 
+    const setPaidPaymentResult = () => {
+        localStorage.setItem('paymentResult', JSON.stringify({
+            status: 'paid',
+            transactionId: 'txn_123',
+        }));
+    };
+
     // ─── Redirect Tests ────────
 
     test('redirects to cart if cart is empty and no user ID', async () => {
@@ -80,13 +87,27 @@ describe('OrderSummary Component', () => {
         expect(screen.getByText('×1')).toBeInTheDocument();
     });
 
-    test('renders Place Order button', async () => {
+    test('renders Continue to Payment button before payment is complete', async () => {
         localStorage.setItem('cart', JSON.stringify(mockCartItems));
         global.fetch = jest.fn();
         await act(async () => {
             renderOrderSummary();
         });
-        expect(screen.getByText('Place Order')).toBeInTheDocument();
+        expect(screen.getByText('Continue to Payment')).toBeInTheDocument();
+    });
+
+    test('routes to payment before allowing order placement', async () => {
+        localStorage.setItem('cart', JSON.stringify(mockCartItems));
+        const mockShowToast = jest.fn();
+        global.fetch = jest.fn();
+        await act(async () => {
+            renderOrderSummary({ showToast: mockShowToast });
+        });
+
+        fireEvent.click(screen.getByText('Continue to Payment'));
+
+        expect(mockShowToast).toHaveBeenCalledWith('Complete payment before placing your order.', 'error');
+        expect(mockNavigate).toHaveBeenCalledWith('/payment');
     });
 
     test('renders back to cart button', async () => {
@@ -130,6 +151,7 @@ describe('OrderSummary Component', () => {
 
     test('shows order confirmation with number after placing order', async () => {
         localStorage.setItem('cart', JSON.stringify(mockCartItems));
+        setPaidPaymentResult();
         const mockShowToast = jest.fn();
         global.fetch = jest.fn(() =>
             Promise.resolve({ ok: true, json: () => Promise.resolve({ success: true }) })
@@ -154,6 +176,7 @@ describe('OrderSummary Component', () => {
 
     test('clears localStorage cart after placing order', async () => {
         localStorage.setItem('cart', JSON.stringify(mockCartItems));
+        setPaidPaymentResult();
         global.fetch = jest.fn(() =>
             Promise.resolve({ ok: true, json: () => Promise.resolve({ success: true }) })
         );
@@ -168,11 +191,13 @@ describe('OrderSummary Component', () => {
 
         await waitFor(() => {
             expect(localStorage.getItem('cart')).toBeNull();
+            expect(localStorage.getItem('paymentResult')).toBeNull();
         });
     });
 
     test('shows back to restaurants button after order is placed', async () => {
         localStorage.setItem('cart', JSON.stringify(mockCartItems));
+        setPaidPaymentResult();
         global.fetch = jest.fn(() =>
             Promise.resolve({ ok: true, json: () => Promise.resolve({ success: true }) })
         );

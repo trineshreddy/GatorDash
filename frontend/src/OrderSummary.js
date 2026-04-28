@@ -20,6 +20,14 @@ function OrderSummary({ onLogout, showToast }) {
         }
     };
 
+    const getPaymentResult = () => {
+        try {
+            return JSON.parse(localStorage.getItem('paymentResult') || '{}');
+        } catch {
+            return {};
+        }
+    };
+
     // Generate order confirmation number
     const generateOrderNumber = () => {
         const timestamp = Date.now().toString(36).toUpperCase();
@@ -97,9 +105,17 @@ function OrderSummary({ onLogout, showToast }) {
     const subtotal = getSubtotal();
     const tax = subtotal * TAX_RATE;
     const total = subtotal + tax;
+    const paymentResult = getPaymentResult();
+    const hasPaid = paymentResult.status === 'paid';
 
     // Place order via backend API
     const handlePlaceOrder = async () => {
+        if (!hasPaid) {
+            if (showToast) showToast('Complete payment before placing your order.', 'error');
+            navigate('/payment');
+            return;
+        }
+
         setPlacing(true);
         const user = getUser();
         const confirmNumber = generateOrderNumber();
@@ -146,6 +162,7 @@ function OrderSummary({ onLogout, showToast }) {
 
         // Always clear localStorage cart
         localStorage.removeItem('cart');
+        localStorage.removeItem('paymentResult');
         window.dispatchEvent(new Event('cartUpdated'));
 
         setOrderNumber(confirmNumber);
@@ -249,7 +266,7 @@ function OrderSummary({ onLogout, showToast }) {
                             Placing Order...
                         </>
                     ) : (
-                        'Place Order'
+                        hasPaid ? 'Place Order' : 'Continue to Payment'
                     )}
                 </button>
             </div>
