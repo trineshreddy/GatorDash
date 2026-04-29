@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import SignUp from './SignUp';
 import SignIn from './SignIn';
@@ -47,6 +47,20 @@ function App() {
     setToast({ message, type, visible: true });
     setTimeout(() => setToast((prev) => ({ ...prev, visible: false })), 3000);
   };
+
+  useEffect(() => {
+    const handleSessionExpired = () => {
+      localStorage.removeItem(AUTH_TOKEN_KEY);
+      localStorage.removeItem('user');
+      localStorage.removeItem('cart');
+      localStorage.removeItem('paymentResult');
+      setIsLoggedIn(false);
+      showToast('Session expired. Please sign in again.', 'error');
+    };
+
+    window.addEventListener('auth:expired', handleSessionExpired);
+    return () => window.removeEventListener('auth:expired', handleSessionExpired);
+  }, []);
 
   const handleSignIn = async (emailInput, passwordInput) => {
     try {

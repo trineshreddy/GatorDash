@@ -133,6 +133,30 @@ describe('Payment Component', () => {
         expect(showToast).toHaveBeenCalledWith('Card declined', 'error');
     });
 
+    test('dispatches session expired event on unauthorized payment response', async () => {
+        const expiredListener = jest.fn();
+        window.addEventListener('auth:expired', expiredListener);
+        global.fetch = jest.fn(() =>
+            Promise.resolve({
+                ok: false,
+                status: 401,
+                json: () => Promise.resolve({ success: false }),
+            })
+        );
+
+        renderPayment();
+        fillValidPaymentForm();
+
+        fireEvent.click(screen.getByRole('button', { name: /process payment/i }));
+
+        await waitFor(() => {
+            expect(expiredListener).toHaveBeenCalled();
+            expect(mockNavigate).toHaveBeenCalledWith('/signin');
+        });
+
+        window.removeEventListener('auth:expired', expiredListener);
+    });
+
     test('back button returns to order summary', () => {
         renderPayment();
 

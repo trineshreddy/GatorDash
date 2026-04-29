@@ -109,6 +109,12 @@ function Payment({ onLogout, showToast }) {
 
             const data = await response.json().catch(() => ({}));
 
+            if (response.status === 401) {
+                window.dispatchEvent(new Event('auth:expired'));
+                navigate('/signin');
+                return;
+            }
+
             if (!response.ok || data.success === false) {
                 throw new Error(data.message || 'Payment could not be processed.');
             }
