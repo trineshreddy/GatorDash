@@ -400,3 +400,30 @@ func TestUpdateCartItemQuantity(t *testing.T) {
 		t.Fatalf("expected quantity 5, got %v", cartItems[0]["quantity"])
 	}
 }
+
+func TestCartUnauthorizedAccess(t *testing.T) {
+	router, _ := setupTestRouter(t)
+
+	// Try to add to cart without token
+	req, _ := http.NewRequest(http.MethodPost, "/api/cart/add", createJSONBody(map[string]interface{}{
+		"user_id":      "user_123",
+		"menu_item_id": "menu_1",
+		"quantity":     1,
+	}))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	if w.Code != http.StatusUnauthorized {
+		t.Fatalf("add to cart without token expected 401, got %d", w.Code)
+	}
+
+	// Try to view cart without token
+	viewReq, _ := http.NewRequest(http.MethodGet, "/api/cart/user_123", nil)
+	viewW := httptest.NewRecorder()
+	router.ServeHTTP(viewW, viewReq)
+
+	if viewW.Code != http.StatusUnauthorized {
+		t.Fatalf("view cart without token expected 401, got %d", viewW.Code)
+	}
+}

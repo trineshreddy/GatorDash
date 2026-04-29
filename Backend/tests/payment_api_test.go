@@ -136,3 +136,74 @@ func TestProcessPaymentDecline(t *testing.T) {
 		t.Fatalf("expected error message for declined payment")
 	}
 }
+
+func TestProcessPaymentMissingFields(t *testing.T) {
+	router, db := setupTestRouter(t)
+	seedFoodData(t, db)
+
+	// Signup and signin
+	signup := performRequest(router, http.MethodPost, "/api/signup", map[string]interface{}{
+		"name":     "Missing Fields User",
+		"email":    "missingfields@example.com",
+		"phone":    "9999999994",
+		"password": "password123",
+	})
+	if signup.Code != http.StatusOK {
+		t.Fatalf("signup expected 200, got %d", signup.Code)
+	}
+
+	signin := performRequest(router, http.MethodPost, "/api/signin", map[string]interface{}{
+		"email":    "missingfields@example.com",
+		"password": "password123",
+	})
+	if signin.Code != http.StatusOK {
+		t.Fatalf("signin expected 200, got %d", signin.Code)
+	}
+
+	signinResp := parseResponse(t, signin)
+	var signinData map[string]interface{}
+	if err := json.Unmarshal(signinResp.Data, &signinData); err != nil {
+		t.Fatalf("failed to parse signin response: %v", err)
+	}
+	token := signinData["token"].(string)
+
+	// Test with missing amount
+	request, _ := http.NewRequest(http.MethodPost, "/api/payment/process", createJSONBody(map[string]interface{}{
+		"cardholder_name": "Test User",
+		"card_number":     "4242424242424242",
+		"expiry_month":    "12",
+		"expiry_year":     "2028",
+		"cvv":             "123",
+	}))
+	request.Header.Set("Authorization", "Bearer "+token)
+	request.Header.Set("Content-Type", "application/json")
+
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, request)
+
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("payment with missing amount expected 400, got %d", w.Code)
+	}
+}
+
+func TestProcessPaymentUnauthorized(t *testing.T) {
+	router, _ := setupTestRouter(t)
+
+	// Try to access payment without token
+	request, _ := http.NewRequest(http.MethodPost, "/api/payment/process", createJSONBody(map[string]interface{}{
+		"amount":          32.50,
+		"cardholder_name": "Test User",
+		"card_number":     "4242424242424242",
+		"expiry_month":    "12",
+		"expiry_year":     "2028",
+		"cvv":             "123",
+	}))
+	request.Header.Set("Content-Type", "application/json")
+
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, request)
+
+	if w.Code != http.StatusUnauthorized {
+		t.Fatalf("payment without token expected 401, got %d", w.Code)
+	}
+}
