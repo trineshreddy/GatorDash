@@ -226,3 +226,15 @@ func (s *FoodStore) GetOrdersByUserID(userID string) ([]models.Order, error) {
 	}
 	return orders, nil
 }
+
+// GetOrderByID fetches a specific order by its ID, including items.
+func (s *FoodStore) GetOrderByID(orderID string) (*models.Order, error) {
+	var order models.Order
+	if err := s.db.Preload("Items").Where("id = ?", orderID).First(&order).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, fmt.Errorf("order not found")
+		}
+		return nil, fmt.Errorf("failed to fetch order: %w", err)
+	}
+	return &order, nil
+}

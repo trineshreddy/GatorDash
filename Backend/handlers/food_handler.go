@@ -422,6 +422,51 @@ func (h *FoodHandler) PlaceOrder(c *gin.Context) {
 	utils.SendSuccess(c, "Order placed successfully", response)
 }
 
+// ReorderFromPastOrder recreates cart items from a previous order
+func (h *FoodHandler) ReorderFromPastOrder(c *gin.Context) {
+	orderID := c.Param("order_id")
+	if orderID == "" {
+		utils.SendError(c, 400, "Order ID is required")
+		return
+	}
+
+	// Get user ID from JWT context
+	userIDInterface, exists := c.Get("user_id")
+	if !exists {
+		utils.SendError(c, 401, "User ID not found in context")
+		return
+	}
+	currentUserID := userIDInterface.(string)
+
+	// Get the order to verify ownership
+	order, err := h.foodStore.GetOrderByID(orderID)
+	if err != nil {
+		utils.SendError(c, 404, "Order not found")
+		return
+	}
+
+	// Verify order belongs to current user
+	if order.UserID != currentUserID {
+		utils.SendError(c, 403, "Forbidden - Order does not belong to you")
+		return
+	}
+
+	// Add all items from the order back to the cart
+	for _, item := range order.Items {
+		err := h.foodStore.AddToCart(currentUserID, item.MenuItemID, item.Quantity)
+		if err != nil {
+			utils.SendError(c, 500, "Failed to add items to cart")
+			return
+		}
+	}
+
+	utils.SendSuccess(c, "Order items added to cart successfully", gin.H{
+		"order_id": orderID,
+		"user_id":  currentUserID,
+		"items":    len(order.Items),
+	})
+}
+
 // generateOrderNumber creates a unique order number
 func generateOrderNumber() string {
 	// Generate a simple order number using timestamp

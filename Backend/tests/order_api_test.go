@@ -224,3 +224,137 @@ func TestGetOrderHistory(t *testing.T) {
 		t.Fatalf("expected order history item count 1, got %v", orders[0]["items"])
 	}
 }
+
+func TestReorderFromPastOrder(t *testing.T) {
+	router, db := setupTestRouter(t)
+	seedFoodData(t, db)
+
+	// Signup user
+	signup := performRequest(router, http.MethodPost, "/api/signup", map[string]interface{}{
+		"name":     "Reorder User",
+		"email":    "reorder@example.com",
+		"phone":    "9999999985",
+		"password": "password123",
+	})
+	if signup.Code != http.StatusOK {
+		t.Fatalf("signup expected 200, got %d", signup.Code)
+	}
+
+	signupResp := parseResponse(t, signup)
+	var signupData map[string]interface{}
+	if err := json.Unmarshal(signupResp.Data, &signupData); err != nil {
+		t.Fatalf("failed to parse signup response: %v", err)
+	}
+	userID := signupData["id"].(string)
+
+	// Sign in to get JWT token
+	signin := performRequest(router, http.MethodPost, "/api/signin", map[string]interface{}{
+		"email":    "reorder@example.com",
+		"password": "password123",
+	})
+	if signin.Code != http.StatusOK {
+		t.Fatalf("signin expected 200, got %d", signin.Code)
+	}
+
+	signinResp := parseResponse(t, signin)
+	var signinData map[string]interface{}
+	if err := json.Unmarshal(signinResp.Data, &signinData); err != nil {
+		t.Fatalf("failed to parse signin response: %v", err)
+	}
+	token := signinData["token"].(string)
+
+	// Add items to cart
+	addReq, _ := http.NewRequest(http.MethodPost, "/api/cart/add", createJSONBody(map[string]interface{}{
+		"user_id":      userID,
+		"menu_item_id": "menu_1",
+		"quantity":     2,
+	}))
+	addReq.Header.Set("Authorization", "Bearer "+token)
+	addReq.Header.Set("Content-Type", "application/json")
+	addW := httptest.NewRecorder()
+	router.ServeHTTP(addW, addReq)
+	if addW.Code != http.StatusOK {
+		t.Fatalf("add to cart expected 200, got %d", addW.Code)
+	}
+
+	// Place order
+	orderReq, _ := http.NewRequest(http.MethodPost, "/api/order/place", createJSONBody(map[string]interface{}{
+		"user_id": userID,
+		"items": []map[string]interface{}{
+			{
+				"menu_item_id": "menu_1",
+				"quantity":     2,
+				"price":        8.99,
+			},
+		},
+		"total": 17.98,
+	}))
+	orderReq.Header.Set("Authorization", "Bearer "+token)
+	orderReq.Header.Set("Content-Type", "application/json")
+	orderW := httptest.NewRecorder()
+	router.ServeHTTP(orderW, orderReq)
+	if orderW.Code != http.StatusOK {
+		t.Fatalf("place order expected 200, got %d", orderW.Code)
+	}
+
+	orderResp := parseResponse(t, orderW)
+	var orderData map[string]interface{}
+	if err := json.Unmarshal(orderResp.Data, &orderData); err != nil {
+		t.Fatalf("failed to parse order response: %v", err)
+	}
+	orderID := orderData["order_id"].(string)
+
+	// Verify cart is cleared
+	cartReq, _ := http.NewRequest(http.MethodGet, "/api/cart/"+userID, nil)
+	cartReq.Header.Set("Authorization", "Bearer "+token)
+	cartW := httptest.NewRecorder()
+	router.ServeHTTP(cartW, cartReq)
+	if cartW.Code != http.StatusOK {
+		t.Fatalf("get cart expected 200, got %d", cartW.Code)
+	}
+
+	cartResp := parseResponse(t, cartW)
+	var cartItems []interface{}
+	if err := json.Unmarshal(cartResp.Data, &cartItems); err != nil {
+		t.Fatalf("failed to parse cart response: %v", err)
+	}
+	if len(cartItems) != 0 {
+		t.Fatalf("expected empty cart before reorder, got %d items", len(cartItems))
+	}
+
+	// Test reorder - call POST /api/orders/{orderId}/reorder
+	reorderReq, _ := http.NewRequest(http.MethodPost, "/api/orders/"+orderID+"/reorder", nil)
+	reorderReq.Header.Set("Authorization", "Bearer "+token)
+	reorderReq.Header.Set("Content-Type", "application/json")
+	reorderW := httptest.NewRecorder()
+	router.ServeHTTP(reorderW, reorderReq)
+
+	if reorderW.Code != http.StatusOK {
+		t.Fatalf("reorder expected 200, got %d", reorderW.Code)
+	}
+
+	reorderResp := parseResponse(t, reorderW)
+	if !reorderResp.Success {
+		t.Fatalf("expected successful reorder response")
+	}
+
+	// Verify cart now has items from the original order
+	cartCheckReq, _ := http.NewRequest(http.MethodGet, "/api/cart/"+userID, nil)
+	cartCheckReq.Header.Set("Authorization", "Bearer "+token)
+	cartCheckW := httptest.NewRecorder()
+	router.ServeHTTP(cartCheckW, cartCheckReq)
+
+	if cartCheckW.Code != http.StatusOK {
+		t.Fatalf("get cart after reorder expected 200, got %d", cartCheckW.Code)
+	}
+
+	cartCheckResp := parseResponse(t, cartCheckW)
+	var cartItemsAfter []interface{}
+	if err := json.Unmarshal(cartCheckResp.Data, &cartItemsAfter); err != nil {
+		t.Fatalf("failed to parse cart response after reorder: %v", err)
+	}
+	if len(cartItemsAfter) != 1 {
+		t.Fatalf("expected 1 item in cart after reorder, got %d", len(cartItemsAfter))
+	}
+}
+
