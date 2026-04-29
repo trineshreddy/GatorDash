@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from './Navbar';
+import { getAuthHeaders } from './Navbar';
 import './Profile.css';
 
 function getPasswordStrength(password) {
@@ -21,6 +22,8 @@ function Profile({ onLogout, showToast }) {
     const [form, setForm] = useState({ name: '', email: '', phone: '' });
     const [errors, setErrors] = useState({});
     const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+    const [unauthorized, setUnauthorized] = useState(false);
 
     // Change password state
     const [showPasswordSection, setShowPasswordSection] = useState(false);
@@ -31,9 +34,22 @@ function Profile({ onLogout, showToast }) {
         const fetchProfile = async () => {
             setLoading(true);
             const stored = JSON.parse(localStorage.getItem('user') || '{}');
+
             if (stored.id) {
                 try {
-                    const res = await fetch(`/api/user/${stored.id}`);
+                    const res = await fetch(`/api/user/${stored.id}`, {
+                        headers: getAuthHeaders(),
+                    });
+
+                    if (res.status === 401) {
+                        setUnauthorized(true);
+                        setLoading(false);
+                        // Clear stale session
+                        localStorage.removeItem('token');
+                        localStorage.removeItem('user');
+                        return;
+                    }
+
                     const data = await res.json();
                     if (data.success && data.data) {
                         setUser(data.data);
@@ -63,24 +79,39 @@ function Profile({ onLogout, showToast }) {
 
     const handleSave = async () => {
         if (!validate()) return;
+        setSaving(true);
         const stored = JSON.parse(localStorage.getItem('user') || '{}');
+
         try {
             if (stored.id) {
                 const res = await fetch(`/api/user/${stored.id}`, {
                     method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name: form.name, email: form.email, phone: form.phone }),
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({
+                        name: form.name,
+                        email: form.email,
+                        phone: form.phone,
+                    }),
                 });
+
+                if (res.status === 401) {
+                    setUnauthorized(true);
+                    setSaving(false);
+                    return;
+                }
+
                 const data = await res.json();
                 if (!data.success) throw new Error('Save failed');
             }
         } catch (err) {
             // Continue — update localStorage regardless
         }
+
         const updated = { ...stored, ...form };
         localStorage.setItem('user', JSON.stringify(updated));
         setUser(form);
         setEditing(false);
+        setSaving(false);
         if (showToast) showToast('Profile updated!', 'success');
     };
 
@@ -101,21 +132,53 @@ function Profile({ onLogout, showToast }) {
         const stored = JSON.parse(localStorage.getItem('user') || '{}');
         try {
             if (stored.id) {
-                await fetch(`/api/user/${stored.id}`, {
+                const res = await fetch(`/api/user/${stored.id}`, {
                     method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ current_password: passwordForm.current, new_password: passwordForm.newPass }),
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({
+                        current_password: passwordForm.current,
+                        new_password: passwordForm.newPass,
+                    }),
                 });
+
+                if (res.status === 401) {
+                    setUnauthorized(true);
+                    return;
+                }
             }
         } catch (err) {
-            // API might not be ready yet
+            // API might not be ready yet — continue
         }
+
         setPasswordForm({ current: '', newPass: '', confirm: '' });
         setShowPasswordSection(false);
         if (showToast) showToast('Password updated!', 'success');
     };
 
     const strength = getPasswordStrength(passwordForm.newPass);
+
+    // Unauthorized state
+    if (unauthorized) {
+        return (
+            <div className="profile-page">
+                <Navbar onSignOut={onLogout} />
+                <div className="profile-container">
+                    <div className="profile-card">
+                        <div className="unauthorized-state">
+                            <div className="unauth-icon">🔒</div>
+                            <h3>Session Expired</h3>
+                            <p>Please sign in again to view your profile.</p>
+                            <button className="save-btn" onClick={() => {
+                                if (onLogout) onLogout();
+                            }}>
+                                Sign In Again
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="profile-page">
@@ -139,9 +202,11 @@ function Profile({ onLogout, showToast }) {
                                 <label>Name</label>
                                 {editing ? (
                                     <>
-                                        <input className={`profile-input ${errors.name ? 'input-error' : ''}`}
+                                        <input
+                                            className={`profile-input ${errors.name ? 'input-error' : ''}`}
                                             value={form.name}
-                                            onChange={(e) => setForm({ ...form, name: e.target.value })} />
+                                            onChange={(e) => setForm({ ...form, name: e.target.value })}
+                                        />
                                         {errors.name && <span className="field-error">{errors.name}</span>}
                                     </>
                                 ) : (
@@ -154,9 +219,11 @@ function Profile({ onLogout, showToast }) {
                                 <label>Email</label>
                                 {editing ? (
                                     <>
-                                        <input className={`profile-input ${errors.email ? 'input-error' : ''}`}
+                                        <input
+                                            className={`profile-input ${errors.email ? 'input-error' : ''}`}
                                             value={form.email}
-                                            onChange={(e) => setForm({ ...form, email: e.target.value })} />
+                                            onChange={(e) => setForm({ ...form, email: e.target.value })}
+                                        />
                                         {errors.email && <span className="field-error">{errors.email}</span>}
                                     </>
                                 ) : (
@@ -169,9 +236,11 @@ function Profile({ onLogout, showToast }) {
                                 <label>Phone</label>
                                 {editing ? (
                                     <>
-                                        <input className={`profile-input ${errors.phone ? 'input-error' : ''}`}
+                                        <input
+                                            className={`profile-input ${errors.phone ? 'input-error' : ''}`}
                                             value={form.phone || ''}
-                                            onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+                                            onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                                        />
                                         {errors.phone && <span className="field-error">{errors.phone}</span>}
                                     </>
                                 ) : (
@@ -183,11 +252,19 @@ function Profile({ onLogout, showToast }) {
                             <div className="profile-actions">
                                 {editing ? (
                                     <>
-                                        <button className="save-btn" onClick={handleSave}>Save</button>
+                                        <button
+                                            className="save-btn"
+                                            onClick={handleSave}
+                                            disabled={saving}
+                                        >
+                                            {saving ? 'Saving...' : 'Save'}
+                                        </button>
                                         <button className="cancel-btn" onClick={handleCancel}>Cancel</button>
                                     </>
                                 ) : (
-                                    <button className="edit-btn" onClick={() => setEditing(true)}>Edit Profile</button>
+                                    <button className="edit-btn" onClick={() => setEditing(true)}>
+                                        Edit Profile
+                                    </button>
                                 )}
                             </div>
 
@@ -229,11 +306,17 @@ function Profile({ onLogout, showToast }) {
                                                             <div
                                                                 key={i}
                                                                 className="strength-bar"
-                                                                style={{ background: i <= strength.score ? strength.color : 'rgba(255,255,255,0.1)' }}
+                                                                style={{
+                                                                    background: i <= strength.score
+                                                                        ? strength.color
+                                                                        : 'rgba(255,255,255,0.1)'
+                                                                }}
                                                             />
                                                         ))}
                                                     </div>
-                                                    <span className="strength-label" style={{ color: strength.color }}>{strength.label}</span>
+                                                    <span className="strength-label" style={{ color: strength.color }}>
+                                                        {strength.label}
+                                                    </span>
                                                 </div>
                                             )}
                                             {passwordErrors.newPass && <span className="field-error">{passwordErrors.newPass}</span>}
@@ -249,7 +332,9 @@ function Profile({ onLogout, showToast }) {
                                             />
                                             {passwordErrors.confirm && <span className="field-error">{passwordErrors.confirm}</span>}
                                         </div>
-                                        <button className="save-btn" onClick={handlePasswordChange}>Update Password</button>
+                                        <button className="save-btn" onClick={handlePasswordChange}>
+                                            Update Password
+                                        </button>
                                     </div>
                                 )}
                             </div>
