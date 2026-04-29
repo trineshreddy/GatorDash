@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from './Navbar';
+import { getAuthHeaders } from './Navbar';
 import './FoodStalls.css';
 import { stalls as fallbackStalls } from './data';
 
@@ -32,7 +33,18 @@ function FoodStalls({ onLogout }) {
         setLoading(true);
         setError(false);
         try {
-            const response = await fetch('/api/foodstalls');
+            const response = await fetch('/api/foodstalls', {
+                headers: getAuthHeaders(),
+            });
+
+            if (response.status === 401) {
+                // Session expired — clear and redirect
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                navigate('/signin');
+                return;
+            }
+
             if (!response.ok) throw new Error('API error');
             const data = await response.json();
             if (data.success && data.data) {
@@ -41,9 +53,9 @@ function FoodStalls({ onLogout }) {
                 throw new Error('Bad response');
             }
         } catch (err) {
-            // Fall back to hardcoded data if API fails
+            // Fall back to hardcoded data
             setStalls(fallbackStalls);
-            setError(false); // We have fallback data so don't show error
+            setError(false);
         } finally {
             setLoading(false);
         }
