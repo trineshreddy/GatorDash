@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"errors"
+	"fmt"
+	"time"
 
 	"gatordash-backend/models"
 	"gatordash-backend/store"
@@ -221,4 +223,153 @@ func (h *FoodHandler) ClearCart(c *gin.Context) {
 	}
 
 	utils.SendSuccess(c, "Cart cleared successfully", nil)
+}
+
+// GetOrderHistory returns a user's past orders with items.
+func (h *FoodHandler) GetOrderHistory(c *gin.Context) {
+	userID := c.Param("user_id")
+	if userID == "" {
+		utils.SendError(c, 400, "User ID is required")
+		return
+	}
+
+	currentUserID, _ := c.Get("user_id")
+	if currentUserID != userID {
+		utils.SendError(c, 403, "Forbidden")
+		return
+	}
+
+	if _, exists := h.userStore.GetUserByID(userID); !exists {
+		utils.SendError(c, 404, "User not found")
+		return
+	}
+
+	orders, err := h.foodStore.GetOrdersByUserID(userID)
+	if err != nil {
+		utils.SendError(c, 500, err.Error())
+		return
+	}
+
+	response := make([]models.OrderHistoryResponse, 0, len(orders))
+	for _, order := range orders {
+		items := make([]models.OrderHistoryItem, 0, len(order.Items))
+		for _, item := range order.Items {
+			items = append(items, models.OrderHistoryItem{
+				MenuItemID:  item.MenuItemID,
+				Name:        item.Name,
+				Description: item.Description,
+				Price:       item.Price,
+				Quantity:    item.Quantity,
+			})
+		}
+
+		response = append(response, models.OrderHistoryResponse{
+			OrderID:       order.ID,
+			OrderNumber:   order.OrderNumber,
+			Status:        order.Status,
+			TotalAmount:   order.TotalAmount,
+			TaxAmount:     order.TaxAmount,
+			EstimatedTime: "15-20 minutes",
+			CreatedAt:     order.CreatedAt,
+			Items:         items,
+		})
+	}
+
+	utils.SendSuccess(c, "Order history retrieved successfully", response)
+}
+
+// PlaceOrder creates a new order from the user's cart
+func (h *FoodHandler) PlaceOrder(c *gin.Context) {
+	var req models.OrderRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.SendError(c, 400, "Invalid request body")
+		return
+	}
+
+	// Validate user exists
+	if _, exists := h.userStore.GetUserByID(req.UserID); !exists {
+		utils.SendError(c, 404, "User not found")
+		return
+	}
+
+	// Get cart items to validate and create order items
+	cartItems, err := h.foodStore.GetCartItems(req.UserID)
+	if err != nil {
+		utils.SendError(c, 500, "Failed to retrieve cart items")
+		return
+	}
+
+	if len(cartItems) == 0 {
+		utils.SendError(c, 400, "Cart is empty")
+		return
+	}
+
+	// Validate that request items match cart items
+	if len(req.Items) != len(cartItems) {
+		utils.SendError(c, 400, "Order items do not match cart contents")
+		return
+	}
+
+	// Create order
+	order := models.Order{
+		UserID:      req.UserID,
+		OrderNumber: generateOrderNumber(),
+		Status:      "ordered",
+		TotalAmount: req.Total,
+		TaxAmount:   req.Total * 0.07, // 7% tax
+	}
+
+	// Create order items from cart items
+	var orderItems []models.OrderItem
+	for _, cartItem := range cartItems {
+		// Get menu item details for the order item
+		menuItem, exists := h.foodStore.GetMenuItemByID(cartItem.MenuItemID)
+		if !exists {
+			utils.SendError(c, 500, "Failed to retrieve menu item details")
+			return
+		}
+
+		orderItems = append(orderItems, models.OrderItem{
+			MenuItemID:  cartItem.MenuItemID,
+			Name:        cartItem.ItemName,
+			Description: menuItem.Description,
+			Price:       cartItem.Price,
+			Quantity:    cartItem.Quantity,
+		})
+	}
+
+	// Save order and order items to database
+	if err := h.foodStore.CreateOrder(&order, orderItems); err != nil {
+		utils.SendError(c, 500, "Failed to create order")
+		return
+	}
+
+	// Clear the user's cart after successful order
+	if err := h.foodStore.ClearCart(req.UserID); err != nil {
+		// Log error but don't fail the order since it's already created
+		// In production, you might want to handle this differently
+	}
+
+	// Calculate estimated delivery time (15-20 minutes from now)
+	estimatedTime := "15-20 minutes"
+
+	response := models.OrderResponse{
+		OrderID:       order.ID,
+		OrderNumber:   order.OrderNumber,
+		Status:        order.Status,
+		TotalAmount:   order.TotalAmount,
+		EstimatedTime: estimatedTime,
+		CreatedAt:     order.CreatedAt,
+	}
+
+	utils.SendSuccess(c, "Order placed successfully", response)
+}
+
+// generateOrderNumber creates a unique order number
+func generateOrderNumber() string {
+	// Generate a simple order number using timestamp
+	// In production, you might want a more sophisticated approach
+	timestamp := time.Now().Unix()
+	random := timestamp % 1000
+	return fmt.Sprintf("GD-%d-%03d", timestamp, random)
 }

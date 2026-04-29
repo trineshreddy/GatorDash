@@ -130,7 +130,24 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 16px;
     padding: 16px 20px;
+}
+
+.stall-image-wrapper {
+    min-width: 90px;
+    min-height: 90px;
+    border-radius: 16px;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.stall-image {
+    width: 90px;
+    height: 90px;
+    object-fit: cover;
+    display: block;
 }
 
 .stall-info {

@@ -176,3 +176,53 @@ func (s *FoodStore) ClearCart(userID string) error {
 	}
 	return nil
 }
+
+// CreateOrder creates a new order with order items
+func (s *FoodStore) CreateOrder(order *models.Order, orderItems []models.OrderItem) error {
+	// Generate order ID
+	order.ID = fmt.Sprintf("order_%d", time.Now().UnixNano())
+
+	// Use transaction to ensure data consistency
+	tx := s.db.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	if err := tx.Error; err != nil {
+		return err
+	}
+
+	// Create the order
+	if err := tx.Create(order).Error; err != nil {
+		tx.Rollback()
+		return fmt.Errorf("failed to create order: %w", err)
+	}
+
+	// Create order items with unique IDs
+	for i := range orderItems {
+		orderItems[i].ID = fmt.Sprintf("order_item_%d_%d", time.Now().UnixNano(), i)
+		orderItems[i].OrderID = order.ID
+		if err := tx.Create(&orderItems[i]).Error; err != nil {
+			tx.Rollback()
+			return fmt.Errorf("failed to create order item: %w", err)
+		}
+	}
+
+	// Commit the transaction
+	if err := tx.Commit().Error; err != nil {
+		return fmt.Errorf("failed to commit order transaction: %w", err)
+	}
+
+	return nil
+}
+
+// GetOrdersByUserID fetches a user's past orders, including items.
+func (s *FoodStore) GetOrdersByUserID(userID string) ([]models.Order, error) {
+	var orders []models.Order
+	if err := s.db.Preload("Items").Where("user_id = ?", userID).Order("created_at DESC").Find(&orders).Error; err != nil {
+		return nil, fmt.Errorf("failed to fetch orders: %w", err)
+	}
+	return orders, nil
+}

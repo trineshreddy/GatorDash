@@ -30,7 +30,7 @@ func TestGetMenuItemsByName(t *testing.T) {
 	seedFoodData(t, db)
 
 	q := url.Values{}
-	q.Set("name", "Item 1.1")
+	q.Set("name", "Classic Gator Burger")
 	path := "/api/menu-items/by-name?" + q.Encode()
 
 	w := performRequest(router, http.MethodGet, path, nil)
@@ -45,7 +45,7 @@ func TestGetMenuItemsByName(t *testing.T) {
 	if len(items) != 1 {
 		t.Fatalf("expected 1 menu item, got %d", len(items))
 	}
-	if items[0]["name"] != "Item 1.1" {
+	if items[0]["name"] != "Classic Gator Burger" {
 		t.Fatalf("unexpected item name %v", items[0]["name"])
 	}
 }

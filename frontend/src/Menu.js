@@ -135,6 +135,11 @@ function Menu({ onLogout, showToast }) {
                                 return (
                                     <div className="menu-item-card" key={item.id}>
                                         <div className="item-info">
+                                            <img
+                                                className="menu-item-image"
+                                                src={item.image_url || `https://picsum.photos/seed/${encodeURIComponent(item.name)}/300/220`}
+                                                alt={item.name}
+                                            />
                                             <h3 className="item-name">{item.name}</h3>
                                             <p className="item-desc">{item.desc || item.description}</p>
                                             <div className="item-price-row">

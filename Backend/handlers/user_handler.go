@@ -105,11 +105,25 @@ func (h *UserHandler) SignIn(c *gin.Context) {
 		return
 	}
 
-	// Return user without password
-	userResponse := *user
-	userResponse.Password = ""
+	// Generate JWT token
+	token, err := utils.GenerateToken(user.ID, user.Email, user.Name, user.Phone)
+	if err != nil {
+		utils.SendError(c, 500, "Failed to generate token")
+		return
+	}
 
-	utils.SendSuccess(c, "Sign in successful", userResponse)
+	// Return user data with token
+	response := gin.H{
+		"user": gin.H{
+			"id":    user.ID,
+			"name":  user.Name,
+			"email": user.Email,
+			"phone": user.Phone,
+		},
+		"token": token,
+	}
+
+	utils.SendSuccess(c, "Sign in successful", response)
 }
 
 const passwordResetTokenBytes = 32

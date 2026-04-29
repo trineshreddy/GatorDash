@@ -127,32 +127,40 @@ function FoodStalls({ onLogout }) {
             {/* Stall Grid */}
             {!loading && !error && filtered.length > 0 && (
                 <div className="stalls-grid">
-                    {filtered.map((stall, index) => (
-                        <div
-                            className="stall-card"
-                            key={stall.id || index}
-                            style={{ animationDelay: `${index * 0.1}s` }}
-                            onClick={() => navigate(`/menu/${stall.id !== undefined ? stall.id : stalls.indexOf(stall)}`)}
-                        >
+                    {filtered.map((stall, index) => {
+                        const status = stall.status || (stall.is_active ? 'Open Now' : 'Closed');
+                        return (
                             <div
-                                className="stall-color-bar"
-                                style={{ background: stall.color || '#FA4616' }}
-                            />
-                            <div className="stall-content">
-                                <div className="stall-info">
-                                    <div className="stall-header-row">
-                                        <p className="stall-name">{stall.name}</p>
-                                        <span className={`status-badge ${stall.status === 'Open Now' ? 'open' : stall.status === 'Closed' ? 'closed' : 'closing'}`}>
-                                            {stall.status === 'Open Now' && <span className="pulse-dot" />}
-                                            {stall.status}
-                                        </span>
+                                className="stall-card"
+                                key={stall.id || index}
+                                style={{ animationDelay: `${index * 0.1}s` }}
+                                onClick={() => navigate(`/menu/${stall.id !== undefined ? stall.id : stalls.indexOf(stall)}`)}
+                            >
+                                <div
+                                    className="stall-color-bar"
+                                    style={{ background: stall.color || '#FA4616' }}
+                                />
+                                <div className="stall-content">
+                                    {stall.image_url && (
+                                        <div className="stall-image-wrapper">
+                                            <img className="stall-image" src={stall.image_url} alt={stall.name} />
+                                        </div>
+                                    )}
+                                    <div className="stall-info">
+                                        <div className="stall-header-row">
+                                            <p className="stall-name">{stall.name}</p>
+                                            <span className={`status-badge ${status === 'Open Now' ? 'open' : status === 'Closed' ? 'closed' : 'closing'}`}>
+                                                {status === 'Open Now' && <span className="pulse-dot" />}
+                                                {status}
+                                            </span>
+                                        </div>
+                                        <p className="stall-desc">{stall.desc || stall.description || stall.cuisine}</p>
                                     </div>
-                                    <p className="stall-desc">{stall.desc || stall.cuisine}</p>
+                                    <div className="stall-arrow">➜</div>
                                 </div>
-                                <div className="stall-arrow">➜</div>
                             </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             )}
         </div>
