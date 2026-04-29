@@ -283,3 +283,44 @@ func TestForgotAndResetPassword(t *testing.T) {
 		t.Fatalf("signin with new password expected 200, got %d", signin.Code)
 	}
 }
+
+func TestUnauthorizedAccessToProtectedRoute(t *testing.T) {
+	router, _ := setupTestRouter(t)
+
+	// Try to access protected route without token
+	req, _ := http.NewRequest(http.MethodGet, "/api/user/user_123", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	if w.Code != http.StatusUnauthorized {
+		t.Fatalf("expected 401 for protected route without token, got %d", w.Code)
+	}
+}
+
+func TestInvalidTokenFormat(t *testing.T) {
+	router, _ := setupTestRouter(t)
+
+	// Try with malformed auth header
+	req, _ := http.NewRequest(http.MethodGet, "/api/user/user_123", nil)
+	req.Header.Set("Authorization", "InvalidFormatToken")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	if w.Code != http.StatusUnauthorized {
+		t.Fatalf("expected 401 for invalid token format, got %d", w.Code)
+	}
+}
+
+func TestInvalidToken(t *testing.T) {
+	router, _ := setupTestRouter(t)
+
+	// Try with invalid token
+	req, _ := http.NewRequest(http.MethodGet, "/api/user/user_123", nil)
+	req.Header.Set("Authorization", "Bearer invalid.token.value")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	if w.Code != http.StatusUnauthorized {
+		t.Fatalf("expected 401 for invalid token, got %d", w.Code)
+	}
+}

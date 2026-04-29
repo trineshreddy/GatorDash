@@ -43,9 +43,13 @@ func SetupRoutes(userHandler *handlers.UserHandler, foodHandler *handlers.FoodHa
 			protected.DELETE("/cart/:user_id/item/:menu_item_id", foodHandler.RemoveCartItem)
 			protected.DELETE("/cart/:user_id/clear", foodHandler.ClearCart)
 
+			// Payment processing
+			protected.POST("/payment/process", foodHandler.ProcessPayment)
+
 			// Order operations
 			protected.POST("/order/place", foodHandler.PlaceOrder)
 			protected.GET("/orders/:user_id", foodHandler.GetOrderHistory)
+			protected.POST("/orders/:order_id/reorder", foodHandler.ReorderFromPastOrder)
 		}
 	}
 

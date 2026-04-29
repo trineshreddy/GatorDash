@@ -3,6 +3,7 @@ package handlers
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"gatordash-backend/models"
@@ -121,6 +122,62 @@ func (h *FoodHandler) AddToCart(c *gin.Context) {
 	}
 
 	utils.SendSuccess(c, "Item added to cart successfully", nil)
+}
+
+// ProcessPayment handles mock payment processing.
+func (h *FoodHandler) ProcessPayment(c *gin.Context) {
+	var req models.PaymentRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.SendError(c, 400, "Invalid request body")
+		return
+	}
+
+	userID := c.GetString("user_id")
+	if userID == "" {
+		utils.SendError(c, 401, "Unauthorized")
+		return
+	}
+
+	if req.UserID != "" && req.UserID != userID {
+		utils.SendError(c, 403, "User ID does not match token")
+		return
+	}
+
+	if _, exists := h.userStore.GetUserByID(userID); !exists {
+		utils.SendError(c, 404, "User not found")
+		return
+	}
+
+	cardNumber := strings.TrimSpace(req.CardNumber)
+	if len(cardNumber) < 12 || len(cardNumber) > 19 {
+		utils.SendError(c, 400, "card_number must be between 12 and 19 digits")
+		return
+	}
+	if strings.ContainsAny(cardNumber, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ") {
+		utils.SendError(c, 400, "card_number must contain only digits")
+		return
+	}
+
+	cvv := strings.TrimSpace(req.CVV)
+	if len(cvv) < 3 || len(cvv) > 4 {
+		utils.SendError(c, 400, "cvv must be 3 or 4 digits")
+		return
+	}
+
+	if strings.HasSuffix(cardNumber, "0000") || cvv == "000" {
+		utils.SendError(c, 402, "Payment declined: card was declined")
+		return
+	}
+
+	transactionID := fmt.Sprintf("pay_%d", time.Now().UnixNano())
+	paymentResponse := models.PaymentResponse{
+		TransactionID: transactionID,
+		Approved:      true,
+		Amount:        req.Amount,
+		Message:       "Payment processed successfully",
+	}
+
+	utils.SendSuccess(c, "Payment processed successfully", paymentResponse)
 }
 
 // GetCartItems gets all items from user cart.
@@ -363,6 +420,51 @@ func (h *FoodHandler) PlaceOrder(c *gin.Context) {
 	}
 
 	utils.SendSuccess(c, "Order placed successfully", response)
+}
+
+// ReorderFromPastOrder recreates cart items from a previous order
+func (h *FoodHandler) ReorderFromPastOrder(c *gin.Context) {
+	orderID := c.Param("order_id")
+	if orderID == "" {
+		utils.SendError(c, 400, "Order ID is required")
+		return
+	}
+
+	// Get user ID from JWT context
+	userIDInterface, exists := c.Get("user_id")
+	if !exists {
+		utils.SendError(c, 401, "User ID not found in context")
+		return
+	}
+	currentUserID := userIDInterface.(string)
+
+	// Get the order to verify ownership
+	order, err := h.foodStore.GetOrderByID(orderID)
+	if err != nil {
+		utils.SendError(c, 404, "Order not found")
+		return
+	}
+
+	// Verify order belongs to current user
+	if order.UserID != currentUserID {
+		utils.SendError(c, 403, "Forbidden - Order does not belong to you")
+		return
+	}
+
+	// Add all items from the order back to the cart
+	for _, item := range order.Items {
+		err := h.foodStore.AddToCart(currentUserID, item.MenuItemID, item.Quantity)
+		if err != nil {
+			utils.SendError(c, 500, "Failed to add items to cart")
+			return
+		}
+	}
+
+	utils.SendSuccess(c, "Order items added to cart successfully", gin.H{
+		"order_id": orderID,
+		"user_id":  currentUserID,
+		"items":    len(order.Items),
+	})
 }
 
 // generateOrderNumber creates a unique order number

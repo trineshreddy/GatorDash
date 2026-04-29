@@ -49,6 +49,7 @@ func main() {
 	fmt.Println("  PUT    /api/cart/:user_id/item/:menu_item_id")
 	fmt.Println("  DELETE /api/cart/:user_id/item/:menu_item_id")
 	fmt.Println("  DELETE /api/cart/:user_id/clear")
+	fmt.Println("  POST   /api/payment/process")
 	fmt.Println("  POST   /api/order/place")
 
 	log.Fatal(router.Run(port))

@@ -345,15 +345,6 @@ func TestUpdateCartItemQuantity(t *testing.T) {
 	}
 	userID := signupData["id"].(string)
 
-	add := performRequest(router, http.MethodPost, "/api/cart/add", map[string]interface{}{
-		"user_id":      userID,
-		"menu_item_id": "menu_1",
-		"quantity":     2,
-	})
-	if add.Code != http.StatusOK {
-		t.Fatalf("add to cart expected 200, got %d", add.Code)
-	}
-
 	// Sign in to get JWT token
 	signin := performRequest(router, http.MethodPost, "/api/signin", map[string]interface{}{
 		"email":    "qtycart@example.com",
@@ -369,6 +360,19 @@ func TestUpdateCartItemQuantity(t *testing.T) {
 		t.Fatalf("failed to parse signin response: %v", err)
 	}
 	token := signinData["token"].(string)
+
+	addReq, _ := http.NewRequest(http.MethodPost, "/api/cart/add", createJSONBody(map[string]interface{}{
+		"user_id":      userID,
+		"menu_item_id": "menu_1",
+		"quantity":     2,
+	}))
+	addReq.Header.Set("Authorization", "Bearer "+token)
+	addReq.Header.Set("Content-Type", "application/json")
+	addW := httptest.NewRecorder()
+	router.ServeHTTP(addW, addReq)
+	if addW.Code != http.StatusOK {
+		t.Fatalf("add to cart expected 200, got %d", addW.Code)
+	}
 
 	// Update quantity with JWT
 	putReq, _ := http.NewRequest(http.MethodPut, "/api/cart/"+userID+"/item/menu_1", createJSONBody(map[string]interface{}{
@@ -398,5 +402,32 @@ func TestUpdateCartItemQuantity(t *testing.T) {
 	qty, ok := cartItems[0]["quantity"].(float64)
 	if !ok || int(qty) != 5 {
 		t.Fatalf("expected quantity 5, got %v", cartItems[0]["quantity"])
+	}
+}
+
+func TestCartUnauthorizedAccess(t *testing.T) {
+	router, _ := setupTestRouter(t)
+
+	// Try to add to cart without token
+	req, _ := http.NewRequest(http.MethodPost, "/api/cart/add", createJSONBody(map[string]interface{}{
+		"user_id":      "user_123",
+		"menu_item_id": "menu_1",
+		"quantity":     1,
+	}))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	if w.Code != http.StatusUnauthorized {
+		t.Fatalf("add to cart without token expected 401, got %d", w.Code)
+	}
+
+	// Try to view cart without token
+	viewReq, _ := http.NewRequest(http.MethodGet, "/api/cart/user_123", nil)
+	viewW := httptest.NewRecorder()
+	router.ServeHTTP(viewW, viewReq)
+
+	if viewW.Code != http.StatusUnauthorized {
+		t.Fatalf("view cart without token expected 401, got %d", viewW.Code)
 	}
 }
