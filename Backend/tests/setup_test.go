@@ -81,11 +81,11 @@ func seedFoodData(t *testing.T, db *gorm.DB) {
 	t.Helper()
 
 	stalls := []models.FoodStall{
-		{ID: "stall_1", Name: "Gator Bites", Description: "Burgers and fries", Color: "#0D7377", ImageURL: "https://drive.google.com/file/d/1TzDpcSt5FAwdoJNO1AHBPlPJ2D0x4LiK/view", IsActive: true},
-		{ID: "stall_2", Name: "Swamp Pizza", Description: "Pizza and sides", Color: "#FFA500", ImageURL: "https://drive.google.com/file/d/1sZwOe-BPDN45MFRRGNSJclilEuAgH2DM/view", IsActive: true},
-		{ID: "stall_3", Name: "Dockside Wings", Description: "Wings and sauces", Color: "#FF0000", ImageURL: "https://drive.google.com/file/d/1VDgWFEhzwNozosZsXBbq2lo9jbKFeSfn/view", IsActive: true},
-		{ID: "stall_4", Name: "Garden Grill", Description: "Salads and bowls", Color: "#5F8D4E", ImageURL: "https://drive.google.com/file/d/1FJiOPTANy5imYKfTaI7RUMRwFV87W0gT/view", IsActive: true},
-		{ID: "stall_5", Name: "Street Tacos", Description: "Tacos and burritos", Color: "#FEFFDE", ImageURL: "https://drive.google.com/file/d/1A94slBYo0Lpdoq0WAWOjC8KyDEbSqGtA/view", IsActive: true},
+		{ID: "stall_1", Name: "Gator Bites", Description: "Burgers and fries", Color: "#0D7377", ImageURL: "https://images.unsplash.com/photo-1551782450-17144efb5723?auto=format&fit=crop&w=600&q=80", IsActive: true},
+		{ID: "stall_2", Name: "Swamp Pizza", Description: "Pizza and sides", Color: "#FFA500", ImageURL: "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=600&q=80", IsActive: true},
+		{ID: "stall_3", Name: "Dockside Wings", Description: "Wings and sauces", Color: "#FF0000", ImageURL: "https://images.unsplash.com/photo-1567620832903-9fc6debc209f?auto=format&fit=crop&w=600&q=80", IsActive: true},
+		{ID: "stall_4", Name: "Garden Grill", Description: "Salads and bowls", Color: "#5F8D4E", ImageURL: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=600&q=80", IsActive: true},
+		{ID: "stall_5", Name: "Street Tacos", Description: "Tacos and burritos", Color: "#FEFFDE", ImageURL: "https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=format&fit=crop&w=600&q=80", IsActive: true},
 		{ID: "stall_6", Name: "Midnight Noodles", Description: "Noodles and rice", Color: "#FFD4D4", ImageURL: "https://images.unsplash.com/photo-1553621042-f6e147245754?auto=format&fit=crop&w=600&q=80", IsActive: true},
 		{ID: "stall_7", Name: "Sweet Treats", Description: "Desserts and snacks", Color: "#C27BA0", ImageURL: "https://images.unsplash.com/photo-1542827630-8e21ebdf8a92?auto=format&fit=crop&w=600&q=80", IsActive: true},
 	}

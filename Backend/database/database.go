@@ -147,6 +147,8 @@ func seedInitialData() error {
 			ID:          id,
 			Name:        stallNames[i].name,
 			Description: stallNames[i].description,
+			Color:       stallNames[i].color,
+			ImageURL:    stallNames[i].imageURL,
 			IsActive:    true,
 		}
 		if err := DB.Create(&newStall).Error; err != nil {
