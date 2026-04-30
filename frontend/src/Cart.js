@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Navbar from './Navbar';
+import Navbar, { getAuthHeaders } from './Navbar';
 import './Cart.css';
 
 function Cart({ onLogout, showToast }) {
@@ -17,6 +17,16 @@ function Cart({ onLogout, showToast }) {
         } catch {
             return {};
         }
+    };
+
+    const handleUnauthorized = () => {
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        localStorage.removeItem('cart');
+        window.dispatchEvent(new Event('cartUpdated'));
+        if (showToast) showToast('Session expired. Please sign in again.', 'error');
+        navigate('/signin');
     };
 
     // Sync cart to localStorage so Navbar badge stays updated instantly
@@ -40,7 +50,13 @@ function Cart({ onLogout, showToast }) {
         }
 
         try {
-            const response = await fetch(`/api/cart/${user.id}`);
+            const response = await fetch(`/api/cart/${user.id}`, {
+                headers: getAuthHeaders(),
+            });
+            if (response.status === 401) {
+                handleUnauthorized();
+                return;
+            }
             if (!response.ok) throw new Error('Failed to fetch cart');
             const data = await response.json();
 
@@ -100,21 +116,31 @@ function Cart({ onLogout, showToast }) {
                 // Try PUT update first
                 let response = await fetch(`/api/cart/${user.id}/item/${itemId}`, {
                     method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: getAuthHeaders(),
                     body: JSON.stringify({ quantity: newQty }),
                 });
+
+                if (response.status === 401) {
+                    handleUnauthorized();
+                    return;
+                }
 
                 if (!response.ok) {
                     // If PUT doesn't exist, try re-adding with POST
                     response = await fetch('/api/cart/add', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: getAuthHeaders(),
                         body: JSON.stringify({
                             user_id: user.id,
                             menu_item_id: parseInt(itemId),
                             quantity: newQty,
                         }),
                     });
+                }
+
+                if (response.status === 401) {
+                    handleUnauthorized();
+                    return;
                 }
 
                 if (!response.ok) {
@@ -138,7 +164,12 @@ function Cart({ onLogout, showToast }) {
             try {
                 const response = await fetch(`/api/cart/${user.id}/item/${itemId}`, {
                     method: 'DELETE',
+                    headers: getAuthHeaders(),
                 });
+                if (response.status === 401) {
+                    handleUnauthorized();
+                    return;
+                }
                 if (!response.ok) {
                     console.warn('Failed to remove item from backend cart');
                 }
@@ -160,7 +191,12 @@ function Cart({ onLogout, showToast }) {
             try {
                 const response = await fetch(`/api/cart/${user.id}/clear`, {
                     method: 'DELETE',
+                    headers: getAuthHeaders(),
                 });
+                if (response.status === 401) {
+                    handleUnauthorized();
+                    return;
+                }
                 if (!response.ok) {
                     console.warn('Failed to clear backend cart');
                 }

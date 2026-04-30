@@ -18,7 +18,30 @@ function Payment({ onLogout, showToast }) {
     const [processing, setProcessing] = useState(false);
     const [paymentComplete, setPaymentComplete] = useState(false);
 
-    const getToken = () => localStorage.getItem('authToken') || '';
+    const getToken = () => localStorage.getItem('authToken') || localStorage.getItem('token') || '';
+
+    const getUser = () => {
+        try {
+            return JSON.parse(localStorage.getItem('user') || '{}');
+        } catch {
+            return {};
+        }
+    };
+
+    const getPaymentAmount = () => {
+        try {
+            const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+            const subtotal = cart.reduce((sum, item) => {
+                const price = typeof item.price === 'number'
+                    ? item.price
+                    : parseFloat(String(item.price).replace('$', '')) || 0;
+                return sum + price * (item.quantity || 1);
+            }, 0);
+            return Number((subtotal * 1.07).toFixed(2)) || 1;
+        } catch {
+            return 1;
+        }
+    };
 
     const digitsOnly = (value) => value.replace(/\D/g, '');
 
@@ -92,6 +115,8 @@ function Payment({ onLogout, showToast }) {
 
         try {
             const token = getToken();
+            const user = getUser();
+            const [expiryMonth, expiryYear] = form.expiry.split('/');
             const response = await fetch('/api/payment/process', {
                 method: 'POST',
                 headers: {
@@ -99,9 +124,12 @@ function Payment({ onLogout, showToast }) {
                     ...(token ? { Authorization: `Bearer ${token}` } : {}),
                 },
                 body: JSON.stringify({
+                    user_id: user.id,
+                    amount: getPaymentAmount(),
                     cardholder_name: form.cardholderName.trim(),
                     card_number: digitsOnly(form.cardNumber),
-                    expiry: form.expiry,
+                    expiry_month: expiryMonth,
+                    expiry_year: `20${expiryYear}`,
                     cvv: form.cvv,
                     billing_zip: form.billingZip,
                 }),

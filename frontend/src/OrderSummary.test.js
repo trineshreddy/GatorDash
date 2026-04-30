@@ -143,7 +143,12 @@ describe('OrderSummary Component', () => {
             renderOrderSummary();
         });
 
-        expect(global.fetch).toHaveBeenCalledWith('/api/cart/1');
+        expect(global.fetch).toHaveBeenCalledWith(
+            '/api/cart/1',
+            expect.objectContaining({
+                headers: expect.objectContaining({ 'Content-Type': 'application/json' }),
+            })
+        );
         await waitFor(() => {
             expect(screen.getByText('Iced Latte')).toBeInTheDocument();
         });

@@ -30,6 +30,15 @@ function Profile({ onLogout, showToast }) {
     const [passwordForm, setPasswordForm] = useState({ current: '', newPass: '', confirm: '' });
     const [passwordErrors, setPasswordErrors] = useState({});
 
+    const clearSession = () => {
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        localStorage.removeItem('cart');
+        localStorage.removeItem('paymentResult');
+        window.dispatchEvent(new Event('cartUpdated'));
+    };
+
     useEffect(() => {
         const fetchProfile = async () => {
             setLoading(true);
@@ -44,9 +53,7 @@ function Profile({ onLogout, showToast }) {
                     if (res.status === 401) {
                         setUnauthorized(true);
                         setLoading(false);
-                        // Clear stale session
-                        localStorage.removeItem('token');
-                        localStorage.removeItem('user');
+                        clearSession();
                         return;
                     }
 
@@ -97,6 +104,7 @@ function Profile({ onLogout, showToast }) {
                 if (res.status === 401) {
                     setUnauthorized(true);
                     setSaving(false);
+                    clearSession();
                     return;
                 }
 
@@ -143,6 +151,7 @@ function Profile({ onLogout, showToast }) {
 
                 if (res.status === 401) {
                     setUnauthorized(true);
+                    clearSession();
                     return;
                 }
             }

@@ -39,6 +39,7 @@ function FoodStalls({ onLogout }) {
 
             if (response.status === 401) {
                 // Session expired — clear and redirect
+                localStorage.removeItem('authToken');
                 localStorage.removeItem('token');
                 localStorage.removeItem('user');
                 navigate('/signin');

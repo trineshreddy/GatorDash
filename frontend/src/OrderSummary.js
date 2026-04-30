@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Navbar from './Navbar';
+import Navbar, { getAuthHeaders } from './Navbar';
 import './OrderSummary.css';
 
 function OrderSummary({ onLogout, showToast }) {
@@ -28,6 +28,17 @@ function OrderSummary({ onLogout, showToast }) {
         }
     };
 
+    const handleUnauthorized = useCallback(() => {
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        localStorage.removeItem('cart');
+        localStorage.removeItem('paymentResult');
+        window.dispatchEvent(new Event('cartUpdated'));
+        if (showToast) showToast('Session expired. Please sign in again.', 'error');
+        navigate('/signin');
+    }, [navigate, showToast]);
+
     // Generate order confirmation number
     const generateOrderNumber = () => {
         const timestamp = Date.now().toString(36).toUpperCase();
@@ -53,7 +64,13 @@ function OrderSummary({ onLogout, showToast }) {
         }
 
         try {
-            const response = await fetch(`/api/cart/${user.id}`);
+            const response = await fetch(`/api/cart/${user.id}`, {
+                headers: getAuthHeaders(),
+            });
+            if (response.status === 401) {
+                handleUnauthorized();
+                return;
+            }
             if (!response.ok) throw new Error('Failed to fetch cart');
             const data = await response.json();
 
@@ -84,7 +101,7 @@ function OrderSummary({ onLogout, showToast }) {
         } finally {
             setLoading(false);
         }
-    }, [navigate, orderPlaced]);
+    }, [navigate, orderPlaced, handleUnauthorized]);
 
     useEffect(() => {
         fetchCart();
@@ -128,7 +145,7 @@ function OrderSummary({ onLogout, showToast }) {
                 try {
                     const orderResponse = await fetch('/api/order/place', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: getAuthHeaders(),
                         body: JSON.stringify({
                             user_id: user.id,
                             items: cartItems.map((item) => ({
@@ -140,6 +157,11 @@ function OrderSummary({ onLogout, showToast }) {
                         }),
                     });
 
+                    if (orderResponse.status === 401) {
+                        handleUnauthorized();
+                        return;
+                    }
+
                     if (orderResponse.ok) {
                         orderPlacedViaApi = true;
                     }
@@ -148,9 +170,15 @@ function OrderSummary({ onLogout, showToast }) {
                 }
 
                 // Clear backend cart
-                await fetch(`/api/cart/${user.id}/clear`, {
+                const clearResponse = await fetch(`/api/cart/${user.id}/clear`, {
                     method: 'DELETE',
-                }).catch(() => {});
+                    headers: getAuthHeaders(),
+                }).catch(() => null);
+
+                if (clearResponse?.status === 401) {
+                    handleUnauthorized();
+                    return;
+                }
 
                 if (!orderPlacedViaApi) {
                     console.info('Order API not available, cart cleared on backend');

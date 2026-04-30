@@ -4,7 +4,7 @@ import gatorLogo from './assets/gator-logo.png';
 import './Navbar.css';
 
 // Helper to get JWT token from localStorage
-const getToken = () => localStorage.getItem('token');
+const getToken = () => localStorage.getItem('authToken') || localStorage.getItem('token');
 
 // Helper to get auth headers (JWT if available, fallback gracefully)
 export const getAuthHeaders = () => {
@@ -25,6 +25,7 @@ function Navbar({ onSignOut }) {
         setSessionExpired(true);
         localStorage.removeItem('user');
         localStorage.removeItem('cart');
+        localStorage.removeItem('authToken');
         localStorage.removeItem('token');
         setTimeout(() => {
             setSessionExpired(false);
@@ -68,17 +69,10 @@ function Navbar({ onSignOut }) {
         };
     }, [fetchCartCount]);
 
-    const handleSignOut = async () => {
-        try {
-            await fetch('/api/logout', {
-                method: 'POST',
-                headers: getAuthHeaders(),
-            });
-        } catch (err) {
-            // Continue anyway
-        }
+    const handleSignOut = () => {
         localStorage.removeItem('user');
         localStorage.removeItem('cart');
+        localStorage.removeItem('authToken');
         localStorage.removeItem('token');
         if (onSignOut) onSignOut();
         navigate('/signin');

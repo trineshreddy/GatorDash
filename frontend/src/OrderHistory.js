@@ -52,46 +52,50 @@ function OrderHistory({ onLogout, showToast }) {
         catch { return {}; }
     };
 
+    const handleUnauthorized = useCallback(() => {
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        localStorage.removeItem('cart');
+        localStorage.removeItem('paymentResult');
+        window.dispatchEvent(new Event('cartUpdated'));
+        if (showToast) showToast('Session expired. Please sign in again.', 'error');
+        navigate('/signin');
+    }, [navigate, showToast]);
+
+    const normalizeOrder = (order) => ({
+        ...order,
+        id: order.id || order.order_id,
+        total: order.total ?? order.total_amount ?? 0,
+        created_at: order.created_at || order.CreatedAt,
+        items: order.items || [],
+    });
+
     const fetchOrders = useCallback(async () => {
         setLoading(true);
         setError(null);
         const user = getUser();
 
         try {
-            // Try GET /api/orders first (JWT-protected route)
-            const res = await fetch('/api/orders', {
+            if (!user.id) {
+                setOrders([]);
+                return;
+            }
+
+            const res = await fetch(`/api/orders/${user.id}`, {
                 headers: getAuthHeaders(),
             });
 
             if (res.status === 401) {
-                // Session expired — clear and redirect
-                localStorage.removeItem('token');
-                localStorage.removeItem('user');
-                navigate('/signin');
+                handleUnauthorized();
                 return;
             }
 
             if (res.ok) {
                 const data = await res.json();
-                if (data.success && Array.isArray(data.data) && data.data.length > 0) {
-                    setOrders(data.data);
-                    setLoading(false);
+                if (data.success && Array.isArray(data.data)) {
+                    setOrders(data.data.map(normalizeOrder));
                     return;
-                }
-            }
-
-            // Fallback: try user-scoped endpoint
-            if (user.id) {
-                const res2 = await fetch(`/api/orders/${user.id}`, {
-                    headers: getAuthHeaders(),
-                });
-                if (res2.ok) {
-                    const data2 = await res2.json();
-                    if (data2.success && Array.isArray(data2.data) && data2.data.length > 0) {
-                        setOrders(data2.data);
-                        setLoading(false);
-                        return;
-                    }
                 }
             }
 
@@ -104,7 +108,7 @@ function OrderHistory({ onLogout, showToast }) {
         } finally {
             setLoading(false);
         }
-    }, [navigate]);
+    }, [handleUnauthorized]);
 
     useEffect(() => {
         fetchOrders();
@@ -128,6 +132,11 @@ function OrderHistory({ onLogout, showToast }) {
                 method: 'POST',
                 headers: getAuthHeaders(),
             });
+
+            if (res.status === 401) {
+                handleUnauthorized();
+                return;
+            }
 
             if (res.ok) {
                 const data = await res.json();

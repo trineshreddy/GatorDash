@@ -114,9 +114,8 @@ describe('OrderHistory Component', () => {
         });
         renderOrderHistory();
 
-        // New code calls /api/orders first (JWT route)
         await waitFor(() => {
-            expect(global.fetch).toHaveBeenCalledWith('/api/orders', expect.any(Object));
+            expect(global.fetch).toHaveBeenCalledWith('/api/orders/5', expect.any(Object));
         });
         await waitFor(() => {
             expect(screen.getByText('GD-TEST')).toBeInTheDocument();
