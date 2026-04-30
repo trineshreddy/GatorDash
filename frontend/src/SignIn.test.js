@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import SignIn from './SignIn';
 
@@ -28,8 +28,8 @@ describe('SignIn Component', () => {
         expect(screen.getByText(/sign up here/i)).toBeInTheDocument();
     });
 
-    test('calls onSignIn with email and password on submit', () => {
-        const mockSignIn = jest.fn();
+    test('calls onSignIn with email and password on submit', async () => {
+        const mockSignIn = jest.fn().mockResolvedValue();
         renderSignIn({ onSignIn: mockSignIn });
 
         fireEvent.change(screen.getByPlaceholderText('Enter your email'), {
@@ -40,7 +40,34 @@ describe('SignIn Component', () => {
         });
         fireEvent.click(screen.getByRole('button', { name: /sign in/i }));
 
-        expect(mockSignIn).toHaveBeenCalledWith('user@example.com', 'Password123');
+        await waitFor(() => {
+            expect(mockSignIn).toHaveBeenCalledWith('user@example.com', 'Password123');
+        });
+    });
+
+    test('disables submit button while sign in request is running', async () => {
+        let resolveSignIn;
+        const mockSignIn = jest.fn(() => new Promise((resolve) => {
+            resolveSignIn = resolve;
+        }));
+
+        renderSignIn({ onSignIn: mockSignIn });
+
+        fireEvent.change(screen.getByPlaceholderText('Enter your email'), {
+            target: { value: 'user@example.com' },
+        });
+        fireEvent.change(screen.getByPlaceholderText('Enter your password'), {
+            target: { value: 'Password123' },
+        });
+        fireEvent.click(screen.getByRole('button', { name: /sign in/i }));
+
+        expect(screen.getByRole('button', { name: /signing in/i })).toBeDisabled();
+
+        resolveSignIn();
+
+        await waitFor(() => {
+            expect(screen.getByRole('button', { name: /sign in/i })).not.toBeDisabled();
+        });
     });
 
     test('password visibility toggle works', () => {

@@ -345,15 +345,6 @@ func TestUpdateCartItemQuantity(t *testing.T) {
 	}
 	userID := signupData["id"].(string)
 
-	add := performRequest(router, http.MethodPost, "/api/cart/add", map[string]interface{}{
-		"user_id":      userID,
-		"menu_item_id": "menu_1",
-		"quantity":     2,
-	})
-	if add.Code != http.StatusOK {
-		t.Fatalf("add to cart expected 200, got %d", add.Code)
-	}
-
 	// Sign in to get JWT token
 	signin := performRequest(router, http.MethodPost, "/api/signin", map[string]interface{}{
 		"email":    "qtycart@example.com",
@@ -369,6 +360,19 @@ func TestUpdateCartItemQuantity(t *testing.T) {
 		t.Fatalf("failed to parse signin response: %v", err)
 	}
 	token := signinData["token"].(string)
+
+	addReq, _ := http.NewRequest(http.MethodPost, "/api/cart/add", createJSONBody(map[string]interface{}{
+		"user_id":      userID,
+		"menu_item_id": "menu_1",
+		"quantity":     2,
+	}))
+	addReq.Header.Set("Authorization", "Bearer "+token)
+	addReq.Header.Set("Content-Type", "application/json")
+	addW := httptest.NewRecorder()
+	router.ServeHTTP(addW, addReq)
+	if addW.Code != http.StatusOK {
+		t.Fatalf("add to cart expected 200, got %d", addW.Code)
+	}
 
 	// Update quantity with JWT
 	putReq, _ := http.NewRequest(http.MethodPut, "/api/cart/"+userID+"/item/menu_1", createJSONBody(map[string]interface{}{

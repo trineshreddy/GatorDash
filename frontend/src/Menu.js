@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { stalls as fallbackStalls, menus as fallbackMenus } from './data';
 import Navbar from './Navbar';
+import { getAuthHeaders } from './Navbar';
 import './Menu.css';
 
 function Menu({ onLogout, showToast }) {
@@ -17,13 +18,27 @@ function Menu({ onLogout, showToast }) {
         const fetchMenu = async () => {
             setLoading(true);
             try {
-                const response = await fetch(`/api/foodstalls/${stallId}/menu`);
+                const response = await fetch(`/api/foodstalls/${stallId}/menu`, {
+                    headers: getAuthHeaders(),
+                });
+
+                if (response.status === 401) {
+                    localStorage.removeItem('authToken');
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                    navigate('/signin');
+                    return;
+                }
+
                 if (!response.ok) throw new Error('API error');
                 const data = await response.json();
+
                 if (data.success && data.data) {
                     setMenuItems(data.data);
                     // Also fetch stall info
-                    const stallRes = await fetch('/api/foodstalls');
+                    const stallRes = await fetch('/api/foodstalls', {
+                        headers: getAuthHeaders(),
+                    });
                     const stallData = await stallRes.json();
                     if (stallData.success) {
                         const found = stallData.data.find(s => String(s.id) === String(stallId));
@@ -41,7 +56,7 @@ function Menu({ onLogout, showToast }) {
             }
         };
         fetchMenu();
-    }, [stallId]);
+    }, [stallId, navigate]);
 
     const increment = (itemId) => {
         setQuantities(prev => ({ ...prev, [itemId]: (prev[itemId] || 0) + 1 }));
@@ -68,24 +83,30 @@ function Menu({ onLogout, showToast }) {
         localStorage.setItem('cart', JSON.stringify(existing));
         window.dispatchEvent(new Event('cartUpdated'));
 
-        // Call backend API
+        // Call backend API with JWT headers
         try {
             const response = await fetch('/api/cart/add', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: getAuthHeaders(),
                 body: JSON.stringify({
                     user_id: user.id,
                     menu_item_id: item.id,
                     quantity: qty,
                 }),
             });
-            if (!response.ok) throw new Error('Cart API error');
+
+            if (response.status === 401) {
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                navigate('/signin');
+                return;
+            }
         } catch (err) {
-            // localStorage already updated, so the app still works
+            // localStorage already updated so app still works
         }
 
         if (showToast) showToast(`${item.name} added to cart!`, 'success');
-        // Reset quantity after adding
         setQuantities(prev => ({ ...prev, [item.id]: 0 }));
     };
 
@@ -114,7 +135,9 @@ function Menu({ onLogout, showToast }) {
             <div className="menu-container">
                 <div className="menu-header">
                     <h2>{stall ? `${stall.name} Menu` : 'Menu'}</h2>
-                    <button className="back-btn" onClick={() => navigate('/foodstalls')}>← Back to Stalls</button>
+                    <button className="back-btn" onClick={() => navigate('/foodstalls')}>
+                        ← Back to Stalls
+                    </button>
                 </div>
 
                 {loading && (
@@ -135,16 +158,13 @@ function Menu({ onLogout, showToast }) {
                                 return (
                                     <div className="menu-item-card" key={item.id}>
                                         <div className="item-info">
-                                            <img
-                                                className="menu-item-image"
-                                                src={item.image_url || `https://picsum.photos/seed/${encodeURIComponent(item.name)}/300/220`}
-                                                alt={item.name}
-                                            />
                                             <h3 className="item-name">{item.name}</h3>
                                             <p className="item-desc">{item.desc || item.description}</p>
                                             <div className="item-price-row">
                                                 <span className="item-price">
-                                                    {typeof item.price === 'string' ? item.price : `$${priceNum.toFixed(2)}`}
+                                                    {typeof item.price === 'string'
+                                                        ? item.price
+                                                        : `$${priceNum.toFixed(2)}`}
                                                 </span>
                                                 {qty > 0 && (
                                                     <span className="item-subtotal">

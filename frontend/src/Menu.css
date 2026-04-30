@@ -90,15 +90,6 @@
     gap: 16px;
 }
 
-.menu-item-image {
-    width: 150px;
-    height: 110px;
-    border-radius: 16px;
-    object-fit: cover;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    margin-bottom: 14px;
-}
-
 .item-info {
     flex: 1;
 }

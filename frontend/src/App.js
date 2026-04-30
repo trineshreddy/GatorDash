@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import SignUp from './SignUp';
 import SignIn from './SignIn';
@@ -12,14 +12,26 @@ import Profile from './Profile';
 import ForgotPassword from './ForgotPassword';
 import ResetPassword from './ResetPassword';
 import OrderHistory from './OrderHistory';
+import Payment from './Payment';
 import './App.css';
 
 const dummyUser = { email: 'user@example.com', password: 'Password123' };
+const AUTH_TOKEN_KEY = 'authToken';
+
+const hasStoredSession = () => {
+  return Boolean(localStorage.getItem(AUTH_TOKEN_KEY) || localStorage.getItem('user'));
+};
+
+const getSignInUser = (data) => {
+  return data?.user || data?.data?.user || data?.data || null;
+};
+
+const getSignInToken = (data) => {
+  return data?.token || data?.data?.token || '';
+};
 
 function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(() => {
-    return localStorage.getItem('user') !== null;
-  });
+  const [isLoggedIn, setIsLoggedIn] = useState(hasStoredSession);
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -36,6 +48,20 @@ function App() {
     setTimeout(() => setToast((prev) => ({ ...prev, visible: false })), 3000);
   };
 
+  useEffect(() => {
+    const handleSessionExpired = () => {
+      localStorage.removeItem(AUTH_TOKEN_KEY);
+      localStorage.removeItem('user');
+      localStorage.removeItem('cart');
+      localStorage.removeItem('paymentResult');
+      setIsLoggedIn(false);
+      showToast('Session expired. Please sign in again.', 'error');
+    };
+
+    window.addEventListener('auth:expired', handleSessionExpired);
+    return () => window.removeEventListener('auth:expired', handleSessionExpired);
+  }, []);
+
   const handleSignIn = async (emailInput, passwordInput) => {
     try {
       const response = await fetch('/api/signin', {
@@ -46,7 +72,17 @@ function App() {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        localStorage.setItem('user', JSON.stringify(data.data));
+        const user = getSignInUser(data);
+        const token = getSignInToken(data);
+
+        if (token) {
+          localStorage.setItem(AUTH_TOKEN_KEY, token);
+        }
+
+        if (user) {
+          localStorage.setItem('user', JSON.stringify(user));
+        }
+
         setIsLoggedIn(true);
         showToast('Welcome to GatorDash!', 'success');
       } else {
@@ -55,6 +91,7 @@ function App() {
     } catch (err) {
       if (emailInput === dummyUser.email && passwordInput === dummyUser.password) {
         localStorage.setItem('user', JSON.stringify({ name: 'Test User', email: emailInput }));
+        localStorage.removeItem(AUTH_TOKEN_KEY);
         setIsLoggedIn(true);
         showToast('Welcome to GatorDash!', 'success');
       } else {
@@ -64,6 +101,7 @@ function App() {
   };
 
   const handleLogout = () => {
+    localStorage.removeItem(AUTH_TOKEN_KEY);
     localStorage.removeItem('user');
     localStorage.removeItem('cart');
     setIsLoggedIn(false);
@@ -134,6 +172,14 @@ function App() {
           element={
             isLoggedIn
               ? <div className="page-transition"><OrderSummary onLogout={handleLogout} showToast={showToast} /></div>
+              : <Navigate to="/signin" />
+          }
+        />
+        <Route
+          path="/payment"
+          element={
+            isLoggedIn
+              ? <div className="page-transition"><Payment onLogout={handleLogout} showToast={showToast} /></div>
               : <Navigate to="/signin" />
           }
         />
